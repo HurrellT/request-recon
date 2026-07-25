@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Request Recon",
+  "version": "1.0.0",
+  "description": "Intercepta y modifica respuestas de red en tiempo real. Compatible con GraphQL. Para desarrollo frontend y testing.",
+  "permissions": [
+    "debugger",
+    "storage",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "devtools_page": "devtools/devtools.html",
+  "action": {
+    "default_popup": "popup/index.html",
+    "default_title": "Request Recon"
+  }
+}
