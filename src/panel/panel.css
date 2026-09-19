@@ -133,6 +133,88 @@
   cursor: pointer;
 }
 
+#traffic-filter-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+#traffic-filter-menu summary {
+  list-style: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+#traffic-filter-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+#traffic-filter-menu[open] summary {
+  color: var(--text);
+  border-color: var(--border-light);
+}
+
+.traffic-hidden-count,
+.traffic-category-count {
+  color: var(--text-dim);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.traffic-hidden-count {
+  margin-left: 4px;
+  color: var(--yellow);
+}
+
+#traffic-filter-options {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 220px;
+  padding: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  background: var(--bg-panel);
+  box-shadow: 0 8px 24px #0008;
+}
+
+.traffic-filter-heading {
+  margin: 0 4px 5px;
+  color: var(--text-muted);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.traffic-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 4px;
+  cursor: pointer;
+}
+
+.traffic-filter-option:hover {
+  background: var(--bg-hover);
+}
+
+.traffic-filter-option input {
+  accent-color: var(--accent);
+}
+
+.traffic-filter-option span:nth-child(2) {
+  flex: 1;
+}
+
+.traffic-filter-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 4px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
 #filter-input:focus,
 #method-filter:focus,
 .form-input:focus,

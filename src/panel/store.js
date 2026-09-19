@@ -1,5 +1,6 @@
 import { createMemo, createSignal } from "solid-js";
 import { MAX_REQUESTS, getRequestLabel, ruleMatchesRequest } from "../lib/request-utils";
+import { DEFAULT_TRAFFIC_VISIBILITY, TRAFFIC_CATEGORIES, getTrafficCategory, isHiddenByTrafficFilter } from "../lib/traffic-filter";
 
 export const [requests, setRequests] = createSignal([]);
 export const [rules, setRules] = createSignal([]);
@@ -10,6 +11,7 @@ export const [activeTab, setActiveTab] = createSignal("response");
 export const [showRulesSidebar, setShowRulesSidebar] = createSignal(false);
 export const [filterText, setFilterText] = createSignal("");
 export const [methodFilter, setMethodFilter] = createSignal("");
+export const [trafficVisibility, setTrafficVisibility] = createSignal({ ...DEFAULT_TRAFFIC_VISIBILITY });
 export const [toast, setToast] = createSignal(null);
 
 let port = null;
@@ -47,7 +49,27 @@ export function findMatchingRuleForRequest(req) {
   return rules().find((rule) => ruleMatchesRequest(rule, req)) ?? null;
 }
 
-export const visibleRequests = createMemo(() => {
+export function applyTrafficVisibility(value) {
+  setTrafficVisibility({
+    ...DEFAULT_TRAFFIC_VISIBILITY,
+    ...Object.fromEntries(TRAFFIC_CATEGORIES.map((category) => [category, value?.[category] === true])),
+  });
+}
+
+export function updateTrafficVisibility(category, show) {
+  if (!TRAFFIC_CATEGORIES.includes(category)) return;
+  const next = { ...trafficVisibility(), [category]: show };
+  setTrafficVisibility(next);
+  chrome.storage.local.set({ trafficVisibility: next });
+}
+
+export function setAllTrafficVisible(show) {
+  const next = Object.fromEntries(TRAFFIC_CATEGORIES.map((category) => [category, show]));
+  setTrafficVisibility(next);
+  chrome.storage.local.set({ trafficVisibility: next });
+}
+
+export const matchingRequests = createMemo(() => {
   const filter = filterText().toLowerCase().trim();
   const method = methodFilter();
   let visible = requests().slice().reverse();
@@ -65,6 +87,20 @@ export const visibleRequests = createMemo(() => {
 
   return visible;
 });
+
+export const hiddenCategoryCounts = createMemo(() => {
+  const counts = { preflight: 0, assets: 0, navigation: 0 };
+  const visibility = trafficVisibility();
+  for (const req of matchingRequests()) {
+    if (!isHiddenByTrafficFilter(req, visibility)) continue;
+    counts[getTrafficCategory(req)]++;
+  }
+  return counts;
+});
+
+export const hiddenRequestCount = createMemo(() => Object.values(hiddenCategoryCounts()).reduce((total, count) => total + count, 0));
+
+export const visibleRequests = createMemo(() => matchingRequests().filter((req) => !isHiddenByTrafficFilter(req, trafficVisibility())));
 
 export function clearRequests() {
   setRequests([]);

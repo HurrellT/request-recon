@@ -1,21 +1,26 @@
 import { render } from "solid-js/web";
-import { createEffect, createMemo, createSignal, For, Match, Show, Switch } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
 import "../styles.css";
 import "./panel.css";
 import {
   activeTab,
+  applyTrafficVisibility,
   clearRequests,
   directEditRule,
   filterText,
   findMatchingRuleForRequest,
   findRule,
+  hiddenCategoryCounts,
+  hiddenRequestCount,
   isRecording,
+  matchingRequests,
   methodFilter,
   requests,
   rules,
   selectedRequest,
   send,
   setActiveTab,
+  setAllTrafficVisible,
   setDirectEditRule,
   setFilterText,
   setMethodFilter,
@@ -25,6 +30,8 @@ import {
   showRulesSidebar,
   showToast,
   toast,
+  trafficVisibility,
+  updateTrafficVisibility,
   visibleRequests,
 } from "./store";
 import { usePort } from "./usePort";
@@ -61,9 +68,18 @@ function PanelApp() {
   const tabId = chrome.devtools.inspectedWindow.tabId;
   usePort(tabId);
 
+  onMount(() => {
+    chrome.storage.local.get("trafficVisibility").then(({ trafficVisibility: saved }) => {
+      if (saved) applyTrafficVisibility(saved);
+    });
+  });
+
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "local" && changes.rules) {
       setRules(changes.rules.newValue || []);
+    }
+    if (area === "local" && changes.trafficVisibility) {
+      applyTrafficVisibility(changes.trafficVisibility.newValue);
     }
   });
 
@@ -101,6 +117,37 @@ function PanelApp() {
           <option value="">Todos</option>
           <For each={HTTP_METHODS}>{(method) => <option value={method}>{method}</option>}</For>
         </select>
+        <details id="traffic-filter-menu">
+          <summary class="toolbar-btn" title="Mostrar u ocultar tráfico de fondo">
+            Tráfico <Show when={hiddenRequestCount() > 0}><span class="traffic-hidden-count">{hiddenRequestCount()}</span></Show>
+          </summary>
+          <div id="traffic-filter-options">
+            <div class="traffic-filter-heading">Mostrar en la lista</div>
+            <For each={[
+              ["preflight", "Preflights CORS"],
+              ["assets", "Recursos estáticos"],
+              ["navigation", "Navegación SSR"],
+            ]}>
+              {([category, label]) => (
+                <label class="traffic-filter-option">
+                  <input
+                    type="checkbox"
+                    checked={trafficVisibility()[category]}
+                    onChange={(event) => updateTrafficVisibility(category, event.currentTarget.checked)}
+                  />
+                  <span>{label}</span>
+                  <Show when={hiddenCategoryCounts()[category] > 0}>
+                    <span class="traffic-category-count">{hiddenCategoryCounts()[category]}</span>
+                  </Show>
+                </label>
+              )}
+            </For>
+            <div class="traffic-filter-actions">
+              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>Mostrar todo</button>
+              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(false)}>Ocultar ruido</button>
+            </div>
+          </div>
+        </details>
         <div class="separator" />
         <button class="toolbar-btn" id="rules-toggle-btn" title="Ver reglas guardadas" onClick={() => setShowRulesSidebar((open) => !open)}>
           Reglas <Show when={activeRulesCount() > 0}><span id="rules-count">{activeRulesCount()}</span></Show>
@@ -125,14 +172,17 @@ function RequestList() {
     <div id="request-list-panel">
       <div id="request-list-header">
         <span>Requests</span>
-        <span id="request-count">{visibleRequests().length}</span>
+        <span id="request-count" title="Visibles / coincidencias">{visibleRequests().length}/{matchingRequests().length}</span>
       </div>
       <div id="request-list">
         <Show
           when={visibleRequests().length > 0}
           fallback={
             <div class="empty-state">
-              <div>{requests().length === 0 ? "Sin requests capturados" : "Sin coincidencias"}</div>
+              <div>{requests().length === 0 ? "Sin requests capturados" : hiddenRequestCount() > 0 ? `${hiddenRequestCount()} requests ocultos` : "Sin coincidencias"}</div>
+              <Show when={hiddenRequestCount() > 0}>
+                <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>Mostrar todo</button>
+              </Show>
               <Show when={requests().length === 0}>
                 <p>
                   Presiona <strong>Iniciar</strong> para comenzar
