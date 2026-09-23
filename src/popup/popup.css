@@ -2,7 +2,13 @@ html,
 body,
 #root {
   width: 300px;
-  min-height: 100%;
+  height: auto;
+  min-height: 0;
+}
+
+html,
+body {
+  overflow: visible;
 }
 
 .popup-shell {
