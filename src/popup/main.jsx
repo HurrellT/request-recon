@@ -1,8 +1,9 @@
 import { render } from "solid-js/web";
-import { createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import "../styles.css";
 import "./popup.css";
 import { methodCSSClass, shortPattern } from "../lib/request-utils";
+import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
 
 function PopupApp() {
   const [rules, setRules] = createSignal([]);
@@ -41,6 +42,10 @@ function PopupApp() {
     chrome.storage.onChanged.addListener(onStorageChanged);
   });
 
+  const cleanupLanguage = initializeLanguage();
+  onCleanup(cleanupLanguage);
+  createEffect(() => { document.documentElement.lang = language(); });
+
   onCleanup(() => {
     chrome.storage.onChanged.removeListener(onStorageChanged);
   });
@@ -51,32 +56,32 @@ function PopupApp() {
         <div class="logo">RR</div>
         <span class="header-title">Request Recon</span>
         <Show when={activeCount() > 0}>
-          <span class="active-badge">{activeCount()} activa{activeCount() !== 1 ? "s" : ""}</span>
+          <span class="active-badge">{t("activeRules", { count: activeCount() })}</span>
         </Show>
       </header>
 
       <div id="rules-section">
-        <div class="section-label">Reglas</div>
+        <div class="section-label">{t("rules")}</div>
         <div id="popup-rules-list">
           <Show
             when={rules().length > 0}
             fallback={
               <div class="empty-state">
-                <div>Sin reglas configuradas</div>
-                <p>Abrí DevTools → pestaña Request Recon para crear reglas</p>
+                <div>{t("noRules")}</div>
+                <p>{t("noRulesPopup")}</p>
               </div>
             }
           >
             <For each={rules()}>
               {(rule) => (
                 <div class="rule-row" classList={{ disabled: !rule.enabled }}>
-                  <label class="toggle-switch" title={rule.enabled ? "Deshabilitar" : "Habilitar"}>
+                  <label class="toggle-switch" title={rule.enabled ? t("disable") : t("enable")}>
                     <input type="checkbox" checked={!!rule.enabled} onChange={(event) => toggleRule(rule.id, event.currentTarget.checked)} />
                     <span class="toggle-slider" />
                   </label>
                   <div class="rule-info">
                     <div class="rule-name" title={rule.name || rule.urlPattern || ""}>
-                      {rule.name || rule.urlPattern || "(sin nombre)"}
+                      {rule.name || rule.urlPattern || t("unnamed")}
                     </div>
                     <div class="rule-meta">
                       <Show when={rule.method && rule.method !== "*"}>
@@ -95,11 +100,18 @@ function PopupApp() {
       </div>
 
       <footer class="popup-footer">
-        <span class="footer-hint">F12 → Request Recon para editar</span>
+        <span class="footer-hint">{t("popupFooter")}</span>
         <Show when={rules().length > 0}>
-          <button class="btn-all" onClick={toggleAll}>{anyActive() ? "Deshabilitar todo" : "Habilitar todo"}</button>
+          <button class="btn-all" onClick={toggleAll}>{anyActive() ? t("disableAll") : t("enableAll")}</button>
         </Show>
       </footer>
+      <div class="popup-language">
+        <label for="popup-language">{t("language")}</label>
+        <select id="popup-language" value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
+          <option value="es">Español</option>
+          <option value="en">English</option>
+        </select>
+      </div>
     </div>
   );
 }

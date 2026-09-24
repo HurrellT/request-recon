@@ -1,6 +1,7 @@
 import { onCleanup, onMount } from "solid-js";
 import { addRequest, downloadJSON, findRule, setIsRecording, setPort, setRules, showToast } from "./store";
 import { getPath } from "../lib/request-utils";
+import { t } from "../lib/i18n";
 
 export function usePort(tabId) {
   let reconnectTimer = null;
@@ -27,7 +28,7 @@ export function usePort(tabId) {
           setRules(msg.rules || []);
           break;
         case "ERROR":
-          showToast(msg.message, "error");
+          showToast(msg.errorKey ? t(msg.errorKey, msg.params) : msg.message, "error");
           break;
         case "EXPORT_DATA":
           downloadJSON(msg.data, "request-recon-rules.json");

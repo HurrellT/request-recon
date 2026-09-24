@@ -1,3 +1,5 @@
+import { normalizeLanguage, translate } from '../src/lib/translations.js';
+
 // ─── State ────────────────────────────────────────────────────────────────────
 // Maps survive as long as the SW is alive. Keepalive pings from the panel
 // prevent Chrome from killing the SW while DevTools is open.
@@ -26,7 +28,7 @@ async function handlePanelMsg(tabId, msg, port) {
   switch (msg.type) {
     case 'START': {
       const err = await startSession(tabId);
-      if (err) port.postMessage({ type: 'ERROR', message: err });
+      if (err) port.postMessage({ type: 'ERROR', ...err });
       else port.postMessage({ type: 'STATUS', active: true });
       break;
     }
@@ -86,7 +88,7 @@ async function startSession(tabId) {
     activeSessions.add(tabId);
     return null;
   } catch (e) {
-    return e.message || 'Error al conectar el debugger. ¿Hay otra herramienta usando el debugger en esta pestaña?';
+    return { errorKey: 'debuggerConnectFailed', params: { details: e.message || '' } };
   }
 }
 
@@ -150,7 +152,12 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
         ok = await safeCDP(tabId, 'Fetch.failRequest', { requestId, errorReason: 'Failed' });
       } else {
         const errorStatus = matched.blockStatus || matched.statusCode || 500;
-        const errorBody = matched.resBody || `{"error":"Request bloqueado por Request Recon","status":${errorStatus}}`;
+        let currentLanguage = normalizeLanguage(chrome.i18n.getUILanguage());
+        try {
+          const { language: savedLanguage } = await chrome.storage.local.get('language');
+          if (savedLanguage) currentLanguage = normalizeLanguage(savedLanguage);
+        } catch (_) { /* use browser language if storage is unavailable */ }
+        const errorBody = matched.resBody || JSON.stringify({ error: translate(currentLanguage, 'blockedRequest'), status: errorStatus });
         ok = await safeCDP(tabId, 'Fetch.fulfillRequest', {
           requestId,
           responseCode: errorStatus,
@@ -179,7 +186,7 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
       await safeCDP(tabId, 'Fetch.continueRequest', { requestId });
       if (port) {
         try {
-          port.postMessage({ type: 'ERROR', message: `No se pudo aplicar la regla "${matched.name || matched.id}". Revisá la consola del SW (chrome://serviceworker-internals).` });
+          port.postMessage({ type: 'ERROR', errorKey: 'applyRuleFailed', params: { name: matched.name || matched.id } });
         } catch (_) {}
       }
     }
