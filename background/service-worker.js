@@ -184,7 +184,6 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
       }
     }
   } else {
-    console.log(`[RR] no match url="${request.url}" op="${graphql?.operationName ?? '-'}"`);
     await safeCDP(tabId, 'Fetch.continueRequest', { requestId });
   }
 
