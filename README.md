@@ -15,7 +15,7 @@ npm run dev
 npm run build
 ```
 
-Load the generated `dist/` directory as an unpacked Chrome extension.
+In `chrome://extensions`, enable Developer mode and use **Load unpacked** to select the generated `dist/` directory. Selecting the repository root loads unbuilt JSX and leaves the DevTools panel blank. After a rebuild, reload the extension and reopen DevTools.
 
 ## Traffic filters
 

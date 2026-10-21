@@ -807,4 +807,5 @@ function RuleSidebarItem(props) {
   );
 }
 
+document.getElementById("setup-hint")?.remove();
 render(() => <PanelApp />, document.getElementById("root"));
