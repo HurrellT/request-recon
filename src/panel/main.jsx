@@ -1,5 +1,5 @@
 import { render } from "solid-js/web";
-import { createEffect, createMemo, createSignal, For, Match, onMount, Show, Switch } from "solid-js";
+import { createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import "../styles.css";
 import "./panel.css";
 import {
@@ -35,6 +35,7 @@ import {
   visibleRequests,
 } from "./store";
 import { usePort } from "./usePort";
+import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
 import {
   getBodySummary,
   getPath,
@@ -67,6 +68,9 @@ const ERROR_STATUSES = [
 function PanelApp() {
   const tabId = chrome.devtools.inspectedWindow.tabId;
   usePort(tabId);
+  const cleanupLanguage = initializeLanguage();
+  onCleanup(cleanupLanguage);
+  createEffect(() => { document.documentElement.lang = language(); });
 
   onMount(() => {
     chrome.storage.local.get("trafficVisibility").then(({ trafficVisibility: saved }) => {
@@ -91,51 +95,51 @@ function PanelApp() {
         <button
           id="record-btn"
           classList={{ active: isRecording() }}
-          title="Iniciar/detener la captura de red"
+          title={t("recordTitle")}
           onClick={() => send({ type: isRecording() ? "STOP" : "START" })}
         >
           <span id="record-dot" />
-          <span id="record-label">{isRecording() ? "Detener" : "Iniciar"}</span>
+          <span id="record-label">{isRecording() ? t("stop") : t("start")}</span>
         </button>
-        <button class="toolbar-btn" title="Limpiar lista de requests" onClick={clearRequests}>
-          Limpiar
+        <button class="toolbar-btn" title={t("clearTitle")} onClick={clearRequests}>
+          {t("clear")}
         </button>
         <div class="separator" />
         <input
           type="text"
           id="filter-input"
-          placeholder="Filtrar por URL u operación…"
+          placeholder={t("searchPlaceholder")}
           value={filterText()}
           onInput={(event) => setFilterText(event.currentTarget.value)}
         />
         <select
           id="method-filter"
-          title="Filtrar por metodo HTTP"
+          title={t("methodFilterTitle")}
           value={methodFilter()}
           onChange={(event) => setMethodFilter(event.currentTarget.value)}
         >
-          <option value="">Todos</option>
+          <option value="">{t("allMethods")}</option>
           <For each={HTTP_METHODS}>{(method) => <option value={method}>{method}</option>}</For>
         </select>
         <details id="traffic-filter-menu">
-          <summary class="toolbar-btn" title="Mostrar u ocultar tráfico de fondo">
-            Tráfico <Show when={hiddenRequestCount() > 0}><span class="traffic-hidden-count">{hiddenRequestCount()}</span></Show>
+          <summary class="toolbar-btn" title={t("trafficTitle")}>
+            {t("traffic")} <Show when={hiddenRequestCount() > 0}><span class="traffic-hidden-count">{hiddenRequestCount()}</span></Show>
           </summary>
           <div id="traffic-filter-options">
-            <div class="traffic-filter-heading">Mostrar en la lista</div>
+            <div class="traffic-filter-heading">{t("showInList")}</div>
             <For each={[
-              ["preflight", "Preflights CORS"],
-              ["assets", "Recursos estáticos"],
-              ["navigation", "Navegación SSR"],
+              ["preflight", "corsPreflights"],
+              ["assets", "staticResources"],
+              ["navigation", "ssrNavigation"],
             ]}>
-              {([category, label]) => (
+              {([category, labelKey]) => (
                 <label class="traffic-filter-option">
                   <input
                     type="checkbox"
                     checked={trafficVisibility()[category]}
                     onChange={(event) => updateTrafficVisibility(category, event.currentTarget.checked)}
                   />
-                  <span>{label}</span>
+                  <span>{t(labelKey)}</span>
                   <Show when={hiddenCategoryCounts()[category] > 0}>
                     <span class="traffic-category-count">{hiddenCategoryCounts()[category]}</span>
                   </Show>
@@ -143,15 +147,19 @@ function PanelApp() {
               )}
             </For>
             <div class="traffic-filter-actions">
-              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>Mostrar todo</button>
-              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(false)}>Ocultar ruido</button>
+              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button>
+              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(false)}>{t("hideNoise")}</button>
             </div>
           </div>
         </details>
         <div class="separator" />
-        <button class="toolbar-btn" id="rules-toggle-btn" title="Ver reglas guardadas" onClick={() => setShowRulesSidebar((open) => !open)}>
-          Reglas <Show when={activeRulesCount() > 0}><span id="rules-count">{activeRulesCount()}</span></Show>
+        <button class="toolbar-btn" id="rules-toggle-btn" title={t("savedRulesTitle")} onClick={() => setShowRulesSidebar((open) => !open)}>
+          {t("rules")} <Show when={activeRulesCount() > 0}><span id="rules-count">{activeRulesCount()}</span></Show>
         </button>
+        <select id="language-selector" title={t("language")} aria-label={t("language")} value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
+          <option value="es">ES</option>
+          <option value="en">EN</option>
+        </select>
       </div>
 
       <div id="main">
@@ -171,21 +179,21 @@ function RequestList() {
   return (
     <div id="request-list-panel">
       <div id="request-list-header">
-        <span>Requests</span>
-        <span id="request-count" title="Visibles / coincidencias">{visibleRequests().length}/{matchingRequests().length}</span>
+        <span>{t("requests")}</span>
+        <span id="request-count" title={t("visibleMatchesTitle")}>{visibleRequests().length}/{matchingRequests().length}</span>
       </div>
       <div id="request-list">
         <Show
           when={visibleRequests().length > 0}
           fallback={
             <div class="empty-state">
-              <div>{requests().length === 0 ? "Sin requests capturados" : hiddenRequestCount() > 0 ? `${hiddenRequestCount()} requests ocultos` : "Sin coincidencias"}</div>
+              <div>{requests().length === 0 ? t("noRequests") : hiddenRequestCount() > 0 ? t("hiddenRequests", { count: hiddenRequestCount() }) : t("noMatches")}</div>
               <Show when={hiddenRequestCount() > 0}>
-                <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>Mostrar todo</button>
+                <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button>
               </Show>
               <Show when={requests().length === 0}>
                 <p>
-                  Presiona <strong>Iniciar</strong> para comenzar
+                  {t("pressStart")} <strong>{t("start")}</strong> {t("toBegin")}
                 </p>
               </Show>
             </div>
@@ -227,10 +235,10 @@ function RequestItem(props) {
         <span class="request-url">{getPath(props.req.url)}</span>
         <span class={`status-dot ${statusDotClass(props.req.resStatus)}`} title={props.req.resStatus} />
         <Show when={wasIntercepted()}>
-          <span class="rule-active-icon" title="Interceptada por regla">◆</span>
+          <span class="rule-active-icon" title={t("interceptedTitle")}>◆</span>
         </Show>
         <Show when={!wasIntercepted() && hasActiveRule()}>
-          <span class="rule-active-icon rule-pending-icon" title="Regla activa — recargá para interceptar">◈</span>
+          <span class="rule-active-icon rule-pending-icon" title={t("pendingRuleTitle")}>◈</span>
         </Show>
       </div>
       <Show when={subLabel()}>
@@ -281,7 +289,7 @@ function DetailPanel() {
               <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
               <polyline points="13 2 13 9 20 9" />
             </svg>
-            <div>Seleccioná un request para inspeccionarlo</div>
+            <div>{t("selectRequest")}</div>
           </div>
         }
       >
@@ -293,15 +301,15 @@ function DetailPanel() {
               <span class="detail-graphql-op">{header().graphql}</span>
             </Show>
             <Show when={header().modified}>
-              <span class="modified-badge">⚡ Modificado</span>
+              <span class="modified-badge">⚡ {t("modified")}</span>
             </Show>
           </div>
           <div id="detail-url">{header().url}</div>
         </div>
         <div id="tab-bar">
-          <button class="tab-btn" classList={{ active: activeTab() === "request" }} onClick={() => setActiveTab("request")}>Request</button>
-          <button class="tab-btn" classList={{ active: activeTab() === "response" }} onClick={() => setActiveTab("response")}>Respuesta</button>
-          <button class="tab-btn" classList={{ active: activeTab() === "rule" }} onClick={() => setActiveTab("rule")}>Regla ✎</button>
+          <button class="tab-btn" classList={{ active: activeTab() === "request" }} onClick={() => setActiveTab("request")}>{t("requestTab")}</button>
+          <button class="tab-btn" classList={{ active: activeTab() === "response" }} onClick={() => setActiveTab("response")}>{t("responseTab")}</button>
+          <button class="tab-btn" classList={{ active: activeTab() === "rule" }} onClick={() => setActiveTab("rule")}>{t("ruleTab")}</button>
         </div>
         <div id="tab-content">
           <Show when={current()} fallback={<RuleEditor req={null} directRule={direct()} />}>
@@ -335,7 +343,7 @@ function Section(props) {
 function HeadersDisplay(props) {
   const entries = createMemo(() => headersToEntries(props.headers));
   return (
-    <Show when={entries().length > 0} fallback={<span style={{ color: "var(--text-dim)" }}>Sin headers</span>}>
+    <Show when={entries().length > 0} fallback={<span style={{ color: "var(--text-dim)" }}>{t("noHeaders")}</span>}>
       <div class="headers-grid">
         <For each={entries()}>
           {([key, value]) => (
@@ -353,11 +361,11 @@ function HeadersDisplay(props) {
 function RequestTab(props) {
   return (
     <>
-      <Section title="Headers del request">
+      <Section title={t("requestHeaders")}>
         <HeadersDisplay headers={props.req.reqHeaders} />
       </Section>
       <Show when={props.req.reqBody?.trim()}>
-        <Section title="Body del request">
+        <Section title={t("requestBody")}>
           <pre class="code-block">{prettyJSON(props.req.reqBody)}</pre>
         </Section>
       </Show>
@@ -365,7 +373,7 @@ function RequestTab(props) {
         <Section title="GraphQL">
           <Show when={props.req.graphql.operationName}>
             <div style={{ "margin-bottom": "8px" }}>
-              <span style={{ color: "var(--text-muted)", "font-size": "11px" }}>Operación:</span>{" "}
+              <span style={{ color: "var(--text-muted)", "font-size": "11px" }}>{t("operation")}</span>{" "}
               <strong style={{ color: "var(--purple)", "font-family": "var(--font-mono)" }}>{props.req.graphql.operationName}</strong>
             </div>
           </Show>
@@ -373,7 +381,7 @@ function RequestTab(props) {
             <pre class="code-block">{props.req.graphql.query}</pre>
           </Show>
           <Show when={props.req.graphql.variables}>
-            <div style={{ "margin-top": "8px", "font-size": "11px", color: "var(--text-muted)", "text-transform": "uppercase", "letter-spacing": ".4px" }}>Variables</div>
+            <div style={{ "margin-top": "8px", "font-size": "11px", color: "var(--text-muted)", "text-transform": "uppercase", "letter-spacing": ".4px" }}>{t("variables")}</div>
             <pre class="code-block" style={{ "margin-top": "4px" }}>{prettyJSON(JSON.stringify(props.req.graphql.variables))}</pre>
           </Show>
         </Section>
@@ -385,11 +393,11 @@ function RequestTab(props) {
 function ResponseTab(props) {
   return (
     <>
-      <Section title="Headers de respuesta">
+      <Section title={t("responseHeaders")}>
         <HeadersDisplay headers={props.req.resHeaders} />
       </Section>
-      <Section title="Body de respuesta">
-        <Show when={props.req.resBody} fallback={<span style={{ color: "var(--text-dim)" }}>Sin body</span>}>
+      <Section title={t("responseBodySection")}>
+        <Show when={props.req.resBody} fallback={<span style={{ color: "var(--text-dim)" }}>{t("noBody")}</span>}>
           <pre class="code-block">{prettyJSON(props.req.resBody)}</pre>
         </Show>
       </Section>
@@ -452,19 +460,19 @@ function RuleEditor(props) {
     };
     setDirectEditRule(rule);
     send({ type: "SAVE_RULE", rule });
-    showToast(ruleId() ? "Regla actualizada" : "Regla guardada", "success");
+    showToast(ruleId() ? t("ruleUpdated") : t("ruleSaved"), "success");
   };
 
   const deleteRule = () => {
     if (!ruleId()) return;
     send({ type: "DELETE_RULE", ruleId: ruleId() });
     setDirectEditRule(null);
-    showToast("Regla eliminada", "success");
+    showToast(t("ruleDeleted"), "success");
   };
 
   const applyBlockDefaults = (nextBlockRequest = blockRequest(), nextBlockType = blockType(), nextBlockStatus = blockStatus()) => {
     if (nextBlockRequest && nextBlockType !== "network-fail" && !responseBody().trim()) {
-      setResponseBody(prettyJSON(`{"error":"Request bloqueado por Request Recon","status":${nextBlockStatus}}`));
+      setResponseBody(prettyJSON(JSON.stringify({ error: t("blockedRequest"), status: Number(nextBlockStatus) })));
     }
   };
 
@@ -486,51 +494,51 @@ function RuleEditor(props) {
     <div class="rule-editor">
       <Show when={props.req}>
         <Switch>
-          <Match when={wasIntercepted()}><div class="rule-banner intercepted">⚡ Esta request fue interceptada por esta regla.</div></Match>
-          <Match when={existingRule()}><div class="rule-banner pending">◈ La regla matchea, pero esta request fue capturada antes de guardarla. Recargá la llamada para que tome efecto.</div></Match>
-          <Match when={true}><div class="rule-banner new-rule">✎ Nueva regla — se guardará para requests futuras.</div></Match>
+          <Match when={wasIntercepted()}><div class="rule-banner intercepted">{t("interceptedBanner")}</div></Match>
+          <Match when={existingRule()}><div class="rule-banner pending">{t("pendingBanner")}</div></Match>
+          <Match when={true}><div class="rule-banner new-rule">{t("newRuleBanner")}</div></Match>
         </Switch>
       </Show>
 
       <Show when={diagnostics()}>{(diag) => <Diagnostics diag={diag()} />}</Show>
 
       <div class="form-group">
-        <label>Nombre <span class="form-label-note">(etiqueta libre)</span></label>
-        <input class="form-input" type="text" placeholder="Ej: GetCurrentAccounts — caso vacío" value={name()} onInput={(event) => setName(event.currentTarget.value)} />
+        <label>{t("name")} <span class="form-label-note">{t("freeLabel")}</span></label>
+        <input class="form-input" type="text" placeholder={t("namePlaceholder")} value={name()} onInput={(event) => setName(event.currentTarget.value)} />
       </div>
 
       <div class="form-group">
-        <label>URL Pattern <span class="form-label-note">(regex)</span></label>
+        <label>{t("urlPattern")} <span class="form-label-note">(regex)</span></label>
         <input class="form-input" type="text" spellcheck={false} value={urlPattern()} onInput={(event) => setUrlPattern(event.currentTarget.value)} />
-        <div class="form-hint">Usá expresiones regulares. Ej: <code>/api/users</code> o <code>api\.example\.com/graphql</code></div>
+        <div class="form-hint">{t("regexHint")} <code>/api/users</code> {t("or")} <code>api\.example\.com/graphql</code></div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label>Método HTTP</label>
+          <label>{t("httpMethod")}</label>
           <select class="form-select" value={method()} onChange={(event) => setMethod(event.currentTarget.value)}>
-            <option value="*">Cualquiera (*)</option>
+            <option value="*">{t("anyMethod")}</option>
             <For each={HTTP_METHODS}>{(item) => <option value={item}>{item}</option>}</For>
           </select>
         </div>
         <div class="form-group">
-          <label>Status Code</label>
+          <label>{t("statusCode")}</label>
           <input class="form-input" type="number" min="100" max="599" value={statusCode()} onInput={(event) => setStatusCode(event.currentTarget.value)} />
         </div>
       </div>
 
       <Show when={showGraphQL()}>
         <div class="form-group">
-          <label>GraphQL Operation Name</label>
-          <input class="form-input" type="text" placeholder="Dejar vacío para interceptar todas las operaciones de esta URL" value={operationName()} onInput={(event) => setOperationName(event.currentTarget.value)} />
-          <div class="form-hint">Ej: <code>GetUser</code>, <code>CreateOrder</code></div>
+          <label>{t("graphqlOperation")}</label>
+          <input class="form-input" type="text" placeholder={t("operationPlaceholder")} value={operationName()} onInput={(event) => setOperationName(event.currentTarget.value)} />
+          <div class="form-hint">{t("example")} <code>GetUser</code>, <code>CreateOrder</code></div>
         </div>
       </Show>
 
       <div class="form-group">
-        <label>Body del request contiene <span class="form-label-note">(opcional)</span></label>
-        <input class="form-input" type="text" spellcheck={false} placeholder={'Ej: "status":"pending"  —  vacío = aplica a todos los requests de esta URL'} value={bodyContains()} onInput={(event) => setBodyContains(event.currentTarget.value)} />
-        <div class="form-hint">Filtra por substring del request body. Útil para distinguir requests al mismo endpoint con distintos parámetros.</div>
+        <label>{t("bodyContains")} <span class="form-label-note">{t("optional")}</span></label>
+        <input class="form-input" type="text" spellcheck={false} placeholder={t("bodyContainsPlaceholder")} value={bodyContains()} onInput={(event) => setBodyContains(event.currentTarget.value)} />
+        <div class="form-hint">{t("bodyContainsHint")}</div>
       </div>
 
       <div class="form-group">
@@ -543,16 +551,16 @@ function RuleEditor(props) {
               applyBlockDefaults(event.currentTarget.checked);
             }}
           />
-          <span>Simular error / bloquear request</span>
+          <span>{t("simulateError")}</span>
         </label>
-        <div class="form-hint">Retorna un error en lugar de la respuesta del servidor. Para GraphQL usá el campo Operation Name para bloquear solo una operación.</div>
+        <div class="form-hint">{t("simulateErrorHint")}</div>
       </div>
 
       <Show when={blockRequest()}>
         <div style={{ display: "flex", "flex-direction": "column", gap: "12px" }}>
           <div class="form-row">
             <div class="form-group">
-              <label>Tipo de error</label>
+              <label>{t("errorType")}</label>
               <select
                 class="form-select"
                 value={blockType()}
@@ -561,13 +569,13 @@ function RuleEditor(props) {
                   applyBlockDefaults(blockRequest(), event.currentTarget.value);
                 }}
               >
-                <option value="http-error">Error HTTP (respuesta con código de error)</option>
-                <option value="network-fail">Error de red (sin respuesta)</option>
+                <option value="http-error">{t("httpError")}</option>
+                <option value="network-fail">{t("networkError")}</option>
               </select>
             </div>
             <Show when={blockType() !== "network-fail"}>
               <div class="form-group">
-                <label>Status Code</label>
+                <label>{t("statusCode")}</label>
                 <select class="form-select" value={blockStatus()} onChange={(event) => updateBlockStatus(event.currentTarget.value)}>
                   <For each={ERROR_STATUSES}>{([value, label]) => <option value={value}>{label}</option>}</For>
                 </select>
@@ -580,22 +588,22 @@ function RuleEditor(props) {
       <Show when={!(blockRequest() && blockType() === "network-fail")}>
         <div class="form-group">
           <div class="body-header">
-            <label>Response Body</label>
+            <label>{t("responseBody")}</label>
             <div style={{ display: "flex", gap: "4px" }}>
               <button
                 class="btn-icon"
-                title="Formatear JSON"
+                title={t("formatJSON")}
                 onClick={() => {
                   const formatted = tryFormatJSON(responseBody());
                   if (formatted !== null) setResponseBody(formatted);
-                  else showToast("JSON invalido - no se puede formatear", "error");
+                  else showToast(t("invalidJSONFormat"), "error");
                 }}
               >
                 {"{ }"}
               </button>
               <Show when={props.req?.resBody}>
-                <button class="btn-icon" title="Restaurar respuesta original" onClick={() => setResponseBody(prettyJSON(props.req?.resBody ?? ""))}>
-                  ↩ Reset
+                <button class="btn-icon" title={t("restoreResponse")} onClick={() => setResponseBody(prettyJSON(props.req?.resBody ?? ""))}>
+                  {t("reset")}
                 </button>
               </Show>
             </div>
@@ -608,14 +616,14 @@ function RuleEditor(props) {
         <Show when={ruleId()} fallback={<span />}>
           <label class="toggle-label">
             <input type="checkbox" checked={enabled()} onChange={(event) => setEnabled(event.currentTarget.checked)} />
-            <span>Habilitar regla</span>
+            <span>{t("enableRule")}</span>
           </label>
         </Show>
         <div class="btn-group">
           <Show when={ruleId()}>
-            <button class="btn btn-danger" onClick={deleteRule}>Eliminar</button>
+            <button class="btn btn-danger" onClick={deleteRule}>{t("delete")}</button>
           </Show>
-          <button class="btn btn-primary" onClick={save}>{ruleId() ? "Actualizar regla" : "Guardar regla"}</button>
+          <button class="btn btn-primary" onClick={save}>{ruleId() ? t("updateRule") : t("saveRule")}</button>
         </div>
       </div>
     </div>
@@ -636,8 +644,8 @@ function buildDiagnostics(rule) {
 
   if (matchCount > 0) {
     return {
-      summary: `Diagnostico de matching (${matchCount} request${matchCount !== 1 ? "s" : ""} coinciden)`,
-      hint: `La regla matchea ${matchCount} request${matchCount !== 1 ? "s" : ""} capturada${matchCount !== 1 ? "s" : ""}. Recarga la llamada para interceptarla.`,
+      summary: t("diagnosticsMatched", { count: matchCount }),
+      hint: t("diagnosticsMatchedHint", { count: matchCount }),
       rows: [],
       open: false,
     };
@@ -652,24 +660,24 @@ function buildDiagnostics(rule) {
       return false;
     }
   })();
-  rows.push({ ok: urlOk, label: "URL Pattern", value: rule.urlPattern || "(cualquiera)" });
+  rows.push({ ok: urlOk, label: t("urlPattern"), value: rule.urlPattern || t("any") });
 
   const methodOk = !rule.method || rule.method === "*" || (candidate && rule.method.toUpperCase() === candidate.method.toUpperCase());
-  rows.push({ ok: methodOk, label: "Metodo", value: rule.method || "*", actual: candidate ? `request: ${candidate.method}` : "" });
+  rows.push({ ok: methodOk, label: t("method"), value: rule.method || "*", actual: candidate ? t("requestMethodActual", { method: candidate.method }) : "" });
 
   if (rule.operationName) {
     const opOk = candidate && candidate.graphql?.operationName === rule.operationName;
-    rows.push({ ok: opOk, label: "Operation Name", value: rule.operationName, actual: candidate ? `request: ${candidate.graphql?.operationName ?? "-"}` : "" });
+    rows.push({ ok: opOk, label: t("graphqlOperation"), value: rule.operationName, actual: candidate ? t("requestOperationActual", { operation: candidate.graphql?.operationName ?? "-" }) : "" });
   }
 
   if (rule.bodyContains?.trim()) {
     const bodyOk = candidate && candidate.reqBody?.includes(rule.bodyContains.trim());
-    rows.push({ ok: bodyOk, label: "Body contiene", value: rule.bodyContains });
+    rows.push({ ok: bodyOk, label: t("bodyContainsShort"), value: rule.bodyContains });
   }
 
   return {
-    summary: `Diagnostico de matching (0 de ${requests().length} requests coinciden)`,
-    hint: !candidate ? "No hay requests capturadas para comparar." : "Comparando contra el request mas reciente a esta URL.",
+    summary: t("diagnosticsNone", { count: requests().length }),
+    hint: !candidate ? t("noCapturedCompare") : t("comparingLatest"),
     rows,
     open: true,
   };
@@ -714,9 +722,9 @@ function RulesSidebar() {
         const parsed = JSON.parse(loadEvent.target.result);
         const list = Array.isArray(parsed) ? parsed : [parsed];
         send({ type: "IMPORT_RULES", rules: list });
-        showToast(`${list.length} regla(s) importada(s)`, "success");
+        showToast(t("importedRules", { count: list.length }), "success");
       } catch (_) {
-        showToast("JSON inválido", "error");
+        showToast(t("invalidJSON"), "error");
       }
     };
     reader.readAsText(file);
@@ -726,12 +734,12 @@ function RulesSidebar() {
   return (
     <div id="rules-sidebar" classList={{ open: showRulesSidebar() }}>
       <div class="sidebar-header">
-        <span>Reglas guardadas</span>
+        <span>{t("savedRules")}</span>
         <div class="sidebar-actions">
-          <button class="btn-icon" title="Exportar reglas como JSON" onClick={() => send({ type: "EXPORT_RULES" })}>↑ Export</button>
-          <button class="btn-icon" title="Importar reglas desde JSON" onClick={() => fileInput.click()}>↓ Import</button>
+          <button class="btn-icon" title={t("exportRules")} onClick={() => send({ type: "EXPORT_RULES" })}>{t("exportButton")}</button>
+          <button class="btn-icon" title={t("importRules")} onClick={() => fileInput.click()}>{t("importButton")}</button>
           <input ref={fileInput} type="file" accept=".json" style={{ display: "none" }} onChange={importRules} />
-          <button class="btn-icon" title="Cerrar" onClick={() => setShowRulesSidebar(false)}>✕</button>
+          <button class="btn-icon" title={t("close")} onClick={() => setShowRulesSidebar(false)}>✕</button>
         </div>
       </div>
       <div id="rules-list">
@@ -739,9 +747,9 @@ function RulesSidebar() {
           when={rules().length > 0}
           fallback={
             <div class="empty-state">
-              <div>Sin reglas configuradas</div>
+              <div>{t("noRules")}</div>
               <p>
-                Seleccioná un request y guardá una regla desde la pestaña <strong>Regla ✎</strong>
+                {t("noRulesPanel")} <strong>{t("ruleTab")}</strong>
               </p>
             </div>
           }
@@ -768,7 +776,7 @@ function RuleSidebarItem(props) {
 
   return (
     <div class="rule-item" classList={{ disabled: !props.rule.enabled }} onClick={edit}>
-      <label class="toggle-switch" title={props.rule.enabled ? "Deshabilitar" : "Habilitar"} onClick={(event) => event.stopPropagation()}>
+      <label class="toggle-switch" title={props.rule.enabled ? t("disable") : t("enable")} onClick={(event) => event.stopPropagation()}>
         <input
           type="checkbox"
           checked={!!props.rule.enabled}
@@ -778,7 +786,7 @@ function RuleSidebarItem(props) {
       </label>
       <div class="rule-item-info">
         <span class="rule-name">
-          {props.rule.name || props.rule.urlPattern || "(sin nombre)"}
+          {props.rule.name || props.rule.urlPattern || t("unnamed")}
           <Show when={props.rule.blockRequest}> <span style={{ color: "var(--red)", "font-size": "10px" }}>⊘</span></Show>
         </span>
         <div class="rule-meta">
@@ -791,14 +799,14 @@ function RuleSidebarItem(props) {
           <span class="rule-url">{truncate(props.rule.urlPattern || "", 30)}</span>
         </div>
       </div>
-      <span class="rule-edit-hint">✎ editar</span>
+      <span class="rule-edit-hint">{t("editRule")}</span>
       <button
         class="btn-icon rule-delete-btn"
-        title="Eliminar regla"
+        title={t("delete")}
         onClick={(event) => {
           event.stopPropagation();
           send({ type: "DELETE_RULE", ruleId: props.rule.id });
-          showToast("Regla eliminada", "success");
+          showToast(t("ruleDeleted"), "success");
         }}
       >
         ✕
