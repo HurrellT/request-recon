@@ -1,11 +1,11 @@
 import { Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { Icon } from "../../ui/Icon";
+import { Button } from "../../ui/Controls";
 
 export function RulesToggle(props) {
   return (
-    <button
-      type="button"
+    <Button
       class="toolbar-btn"
       id="rules-toggle-btn"
       title={t("savedRulesTitle")}
@@ -16,6 +16,6 @@ export function RulesToggle(props) {
       <Icon name="list-details" />
       <span>{t("rules")}</span>
       <Show when={props.activeCount > 0}><span id="rules-count">{props.activeCount}</span></Show>
-    </button>
+    </Button>
   );
 }

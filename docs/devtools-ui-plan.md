@@ -1,6 +1,6 @@
 # DevTools UI review and component plan
 
-Status: **sections 1–2 committed by the user; section 3 implemented and awaiting review; sections 4–7 pending**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
+Status: **sections 1–3 committed by the user; section 4 implemented and awaiting review; sections 5–7 pending**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
 
 ## Current shape
 
@@ -51,6 +51,8 @@ Run `npm test` and `npm run build` after each section. Review the affected inter
 - Keyboard and accessibility fixes and narrow-width improvements are included in the relevant sections.
 - MPL 2.0 is the selected license for the open core. Section 1 added locally bundled Tabler icons, shared UI components, visible focus styles, and accessible disclosure buttons. The production build includes `LICENSE` and `THIRD_PARTY_NOTICES.txt`; the user committed section 1.
 - Section 2 extracted `PanelToolbar`, `RecordingControl`, `RequestSearch`, `MethodFilter`, `TrafficFilterMenu`, `RulesToggle`, and `LanguageSelector`. The toolbar uses one row above 720 px, two rows down to 441 px, and three rows at 440 px and below. The traffic menu remains within a 320 px viewport, retains hidden counts and saved visibility choices, and closes with Escape. The user committed section 2.
-- Section 3 extracts `RequestList`, `RequestListHeader`, `RequestRow`, `RequestListEmptyState`, and `RequestRuleState`. Rows are keyboard-selectable buttons with visible status and rule labels. The captured upstream status remains in `resStatus`; successful overrides add `appliedStatus`, `networkFailureApplied`, and `appliedBlockRequest` so displayed outcomes stay accurate after rule changes. Empty states distinguish no capture, no filter matches, and hidden matching traffic. Section 3 changes remain uncommitted for review.
+- Section 3 extracts `RequestList`, `RequestListHeader`, `RequestRow`, `RequestListEmptyState`, and `RequestRuleState`. Rows are keyboard-selectable buttons with visible status and rule labels. The captured upstream status remains in `resStatus`; successful overrides add `appliedStatus`, `networkFailureApplied`, and `appliedBlockRequest` so displayed outcomes stay accurate after rule changes. Empty states distinguish no capture, no filter matches, and hidden matching traffic. The user committed section 3.
+- Section 4 extracts `RequestDetail`, `DetailHeader`, `DetailTabs`, `RequestDetails`, `ResponseDetails`, `HeadersTable`, `CodeBlock`, and `GraphQLDetails` with their section CSS. Tabs use arrow, Home, and End keys; the saved-rule detail shows only its applicable Rule tab. Applied and original response statuses are labeled in the header, and the response tab explicitly labels its captured upstream headers and body. The detail panel stacks below the request list at narrow widths. Section 4 changes remain uncommitted for review.
+- Shared control follow-up for section 4: `Button`, `Input`, `Select`, `TextArea`, `FieldLabel`, `FormField`, `CheckboxField`, and `ToggleSwitch` now live in `src/ui/controls` and are used across the toolbar, request list, detail tabs, rule editor, sidebar, and popup. The rule editor's labels and hints are associated with their fields, and the panel and popup share button, form, and toggle styles. This follow-up remains uncommitted with section 4.
 
 No commits will be made; the user reviews and commits the changes.

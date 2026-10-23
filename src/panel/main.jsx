@@ -5,22 +5,22 @@ import "../ui/ui.css";
 import "./panel.css";
 import "./toolbar/toolbar.css";
 import "./request-list/request-list.css";
+import "./detail/detail.css";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
+import { Button, CheckboxField, FormField, Input, Select, TextArea, ToggleSwitch } from "../ui/Controls";
 import { MethodBadge, StatusBadge } from "../ui/Badges";
 import { EmptyState } from "../ui/EmptyState";
-import { CollapsibleSection } from "../ui/CollapsibleSection";
 import { PanelToolbar } from "./toolbar/PanelToolbar";
 import { RequestList } from "./request-list/RequestList";
+import { RequestDetail } from "./detail/RequestDetail";
 import {
-  activeTab,
   applyTrafficVisibility,
   directEditRule,
   findMatchingRuleForRequest,
   findRule,
   requests,
   rules,
-  selectedRequest,
   send,
   setActiveTab,
   setDirectEditRule,
@@ -36,8 +36,6 @@ import { initializeLanguage, language, t } from "../lib/i18n";
 import {
   HTTP_METHODS,
   getPath,
-  getResponseOutcome,
-  headersToEntries,
   prettyJSON,
   ruleMatchesRequest,
   suggestBodyFilter,
@@ -86,7 +84,7 @@ function PanelApp() {
 
       <div id="main">
         <RequestList />
-        <DetailPanel />
+        <RequestDetail renderRuleEditor={(req, directRule) => <RuleEditor req={req} directRule={directRule} />} />
         <RulesSidebar />
       </div>
 
@@ -94,146 +92,6 @@ function PanelApp() {
         {toast()?.message}
       </div>
     </div>
-  );
-}
-
-function DetailPanel() {
-  const current = createMemo(() => selectedRequest());
-  const direct = createMemo(() => directEditRule());
-  const hasDetail = createMemo(() => !!current() || !!direct());
-  const header = createMemo(() => {
-    const req = current();
-    if (req) {
-      const wasModified = req.ruleApplied === true || (req.ruleApplied == null && !!(req.ruleId && findRule(req.ruleId)?.enabled));
-      const outcome = getResponseOutcome(req);
-      return {
-        method: req.method,
-        status: outcome.networkFailure ? t("networkFailureShort") : outcome.status ?? "-",
-        statusTone: outcome.networkFailure ? "error" : undefined,
-        graphql: req.graphql?.operationName,
-        modified: wasModified,
-        url: req.url,
-      };
-    }
-
-    const rule = direct();
-    return {
-      method: rule?.method && rule.method !== "*" ? rule.method : "-",
-      status: rule?.statusCode || "-",
-      statusTone: undefined,
-      graphql: rule?.operationName,
-      modified: false,
-      url: rule?.urlPattern || rule?.name || "",
-    };
-  });
-
-  return (
-    <div id="detail-panel">
-      <Show
-        when={hasDetail()}
-        fallback={
-          <div id="no-selection">
-            <Icon name="file-description" size="lg" />
-            <div>{t("selectRequest")}</div>
-          </div>
-        }
-      >
-        <div id="detail-header">
-          <div class="detail-meta">
-            <MethodBadge method={header().method} detail />
-            <StatusBadge status={header().status} tone={header().statusTone} />
-            <Show when={header().graphql}>
-              <span class="detail-graphql-op">{header().graphql}</span>
-            </Show>
-            <Show when={header().modified}>
-              <span class="modified-badge"><Icon name="bolt" size="sm" /> {t("modified")}</span>
-            </Show>
-          </div>
-          <div id="detail-url">{header().url}</div>
-        </div>
-        <div id="tab-bar">
-          <button class="tab-btn" classList={{ active: activeTab() === "request" }} onClick={() => setActiveTab("request")}>{t("requestTab")}</button>
-          <button class="tab-btn" classList={{ active: activeTab() === "response" }} onClick={() => setActiveTab("response")}>{t("responseTab")}</button>
-          <button class="tab-btn" classList={{ active: activeTab() === "rule" }} onClick={() => setActiveTab("rule")}>{t("ruleTab")}</button>
-        </div>
-        <div id="tab-content">
-          <Show when={current()} fallback={<RuleEditor req={null} directRule={direct()} />}>
-            {(req) => (
-              <Switch>
-                <Match when={activeTab() === "request"}><RequestTab req={req()} /></Match>
-                <Match when={activeTab() === "rule"}><RuleEditor req={req()} directRule={null} /></Match>
-                <Match when={true}><ResponseTab req={req()} /></Match>
-              </Switch>
-            )}
-          </Show>
-        </div>
-      </Show>
-    </div>
-  );
-}
-
-function HeadersDisplay(props) {
-  const entries = createMemo(() => headersToEntries(props.headers));
-  return (
-    <Show when={entries().length > 0} fallback={<span style={{ color: "var(--text-dim)" }}>{t("noHeaders")}</span>}>
-      <div class="headers-grid">
-        <For each={entries()}>
-          {([key, value]) => (
-            <>
-              <span class="header-name">{key}</span>
-              <span class="header-value">{value}</span>
-            </>
-          )}
-        </For>
-      </div>
-    </Show>
-  );
-}
-
-function RequestTab(props) {
-  return (
-    <>
-      <CollapsibleSection title={t("requestHeaders")}>
-        <HeadersDisplay headers={props.req.reqHeaders} />
-      </CollapsibleSection>
-      <Show when={props.req.reqBody?.trim()}>
-        <CollapsibleSection title={t("requestBody")}>
-          <pre class="code-block">{prettyJSON(props.req.reqBody)}</pre>
-        </CollapsibleSection>
-      </Show>
-      <Show when={props.req.graphql}>
-        <CollapsibleSection title="GraphQL">
-          <Show when={props.req.graphql.operationName}>
-            <div style={{ "margin-bottom": "8px" }}>
-              <span style={{ color: "var(--text-muted)", "font-size": "11px" }}>{t("operation")}</span>{" "}
-              <strong style={{ color: "var(--purple)", "font-family": "var(--font-mono)" }}>{props.req.graphql.operationName}</strong>
-            </div>
-          </Show>
-          <Show when={props.req.graphql.query}>
-            <pre class="code-block">{props.req.graphql.query}</pre>
-          </Show>
-          <Show when={props.req.graphql.variables}>
-            <div style={{ "margin-top": "8px", "font-size": "11px", color: "var(--text-muted)", "text-transform": "uppercase", "letter-spacing": ".4px" }}>{t("variables")}</div>
-            <pre class="code-block" style={{ "margin-top": "4px" }}>{prettyJSON(JSON.stringify(props.req.graphql.variables))}</pre>
-          </Show>
-        </CollapsibleSection>
-      </Show>
-    </>
-  );
-}
-
-function ResponseTab(props) {
-  return (
-    <>
-      <CollapsibleSection title={t("responseHeaders")}>
-        <HeadersDisplay headers={props.req.resHeaders} />
-      </CollapsibleSection>
-      <CollapsibleSection title={t("responseBodySection")}>
-        <Show when={props.req.resBody} fallback={<span style={{ color: "var(--text-dim)" }}>{t("noBody")}</span>}>
-          <pre class="code-block">{prettyJSON(props.req.resBody)}</pre>
-        </Show>
-      </CollapsibleSection>
-    </>
   );
 }
 
@@ -334,93 +192,81 @@ function RuleEditor(props) {
 
       <Show when={diagnostics()}>{(diag) => <Diagnostics diag={diag()} />}</Show>
 
-      <div class="form-group">
-        <label>{t("name")} <span class="form-label-note">{t("freeLabel")}</span></label>
-        <input class="form-input" type="text" placeholder={t("namePlaceholder")} value={name()} onInput={(event) => setName(event.currentTarget.value)} />
-      </div>
+      <FormField label={t("name")} note={t("freeLabel")}>
+        {({ id }) => <Input id={id} variant="form" type="text" placeholder={t("namePlaceholder")} value={name()} onInput={(event) => setName(event.currentTarget.value)} />}
+      </FormField>
 
-      <div class="form-group">
-        <label>{t("urlPattern")} <span class="form-label-note">(regex)</span></label>
-        <input class="form-input" type="text" spellcheck={false} value={urlPattern()} onInput={(event) => setUrlPattern(event.currentTarget.value)} />
-        <div class="form-hint">{t("regexHint")} <code>/api/users</code> {t("or")} <code>api\.example\.com/graphql</code></div>
-      </div>
+      <FormField label={t("urlPattern")} note="(regex)" hint={<>{t("regexHint")} <code>/api/users</code> {t("or")} <code>api\.example\.com/graphql</code></>}>
+        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="text" spellcheck={false} value={urlPattern()} onInput={(event) => setUrlPattern(event.currentTarget.value)} />}
+      </FormField>
 
       <div class="form-row">
-        <div class="form-group">
-          <label>{t("httpMethod")}</label>
-          <select class="form-select" value={method()} onChange={(event) => setMethod(event.currentTarget.value)}>
-            <option value="*">{t("anyMethod")}</option>
-            <For each={HTTP_METHODS}>{(item) => <option value={item}>{item}</option>}</For>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>{t("statusCode")}</label>
-          <input class="form-input" type="number" min="100" max="599" value={statusCode()} onInput={(event) => setStatusCode(event.currentTarget.value)} />
-        </div>
+        <FormField label={t("httpMethod")}>
+          {({ id }) => (
+            <Select id={id} variant="form" value={method()} onChange={(event) => setMethod(event.currentTarget.value)}>
+              <option value="*">{t("anyMethod")}</option>
+              <For each={HTTP_METHODS}>{(item) => <option value={item}>{item}</option>}</For>
+            </Select>
+          )}
+        </FormField>
+        <FormField label={t("statusCode")}>
+          {({ id }) => <Input id={id} variant="form" type="number" min="100" max="599" value={statusCode()} onInput={(event) => setStatusCode(event.currentTarget.value)} />}
+        </FormField>
       </div>
 
       <Show when={showGraphQL()}>
-        <div class="form-group">
-          <label>{t("graphqlOperation")}</label>
-          <input class="form-input" type="text" placeholder={t("operationPlaceholder")} value={operationName()} onInput={(event) => setOperationName(event.currentTarget.value)} />
-          <div class="form-hint">{t("example")} <code>GetUser</code>, <code>CreateOrder</code></div>
-        </div>
+        <FormField label={t("graphqlOperation")} hint={<>{t("example")} <code>GetUser</code>, <code>CreateOrder</code></>}>
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="text" placeholder={t("operationPlaceholder")} value={operationName()} onInput={(event) => setOperationName(event.currentTarget.value)} />}
+        </FormField>
       </Show>
 
-      <div class="form-group">
-        <label>{t("bodyContains")} <span class="form-label-note">{t("optional")}</span></label>
-        <input class="form-input" type="text" spellcheck={false} placeholder={t("bodyContainsPlaceholder")} value={bodyContains()} onInput={(event) => setBodyContains(event.currentTarget.value)} />
-        <div class="form-hint">{t("bodyContainsHint")}</div>
-      </div>
+      <FormField label={t("bodyContains")} note={t("optional")} hint={t("bodyContainsHint")}>
+        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="text" spellcheck={false} placeholder={t("bodyContainsPlaceholder")} value={bodyContains()} onInput={(event) => setBodyContains(event.currentTarget.value)} />}
+      </FormField>
 
       <div class="form-group">
-        <label class="toggle-label">
-          <input
-            type="checkbox"
-            checked={blockRequest()}
-            onChange={(event) => {
-              setBlockRequest(event.currentTarget.checked);
-              applyBlockDefaults(event.currentTarget.checked);
-            }}
-          />
-          <span>{t("simulateError")}</span>
-        </label>
-        <div class="form-hint">{t("simulateErrorHint")}</div>
+        <CheckboxField
+          label={t("simulateError")}
+          hint={t("simulateErrorHint")}
+          checked={blockRequest()}
+          onChange={(checked) => {
+            setBlockRequest(checked);
+            applyBlockDefaults(checked);
+          }}
+        />
       </div>
 
       <Show when={blockRequest()}>
         <div style={{ display: "flex", "flex-direction": "column", gap: "12px" }}>
           <div class="form-row">
-            <div class="form-group">
-              <label>{t("errorType")}</label>
-              <select
-                class="form-select"
-                value={blockType()}
-                onChange={(event) => {
+            <FormField label={t("errorType")}>
+              {({ id }) => (
+                <Select id={id} variant="form" value={blockType()} onChange={(event) => {
                   setBlockType(event.currentTarget.value);
                   applyBlockDefaults(blockRequest(), event.currentTarget.value);
-                }}
-              >
-                <option value="http-error">{t("httpError")}</option>
-                <option value="network-fail">{t("networkError")}</option>
-              </select>
-            </div>
+                }}>
+                  <option value="http-error">{t("httpError")}</option>
+                  <option value="network-fail">{t("networkError")}</option>
+                </Select>
+              )}
+            </FormField>
             <Show when={blockType() !== "network-fail"}>
-              <div class="form-group">
-                <label>{t("statusCode")}</label>
-                <select class="form-select" value={blockStatus()} onChange={(event) => updateBlockStatus(event.currentTarget.value)}>
-                  <For each={ERROR_STATUSES}>{([value, label]) => <option value={value}>{label}</option>}</For>
-                </select>
-              </div>
+              <FormField label={t("statusCode")}>
+                {({ id }) => (
+                  <Select id={id} variant="form" value={blockStatus()} onChange={(event) => updateBlockStatus(event.currentTarget.value)}>
+                    <For each={ERROR_STATUSES}>{([value, label]) => <option value={value}>{label}</option>}</For>
+                  </Select>
+                )}
+              </FormField>
             </Show>
           </div>
         </div>
       </Show>
 
       <Show when={!(blockRequest() && blockType() === "network-fail")}>
-        <div class="form-group">
-          <div class="body-header">
-            <label>{t("responseBody")}</label>
+        <FormField
+          label={t("responseBody")}
+          actions={
             <div style={{ display: "flex", gap: "4px" }}>
               <IconButton
                 icon="braces"
@@ -437,23 +283,21 @@ function RuleEditor(props) {
                 </IconButton>
               </Show>
             </div>
-          </div>
-          <textarea class="form-textarea" rows="12" spellcheck={false} value={responseBody()} onInput={(event) => setResponseBody(event.currentTarget.value)} />
-        </div>
+          }
+        >
+          {({ id }) => <TextArea id={id} variant="form" rows="12" spellcheck={false} value={responseBody()} onInput={(event) => setResponseBody(event.currentTarget.value)} />}
+        </FormField>
       </Show>
 
       <div class="rule-actions">
         <Show when={ruleId()} fallback={<span />}>
-          <label class="toggle-label">
-            <input type="checkbox" checked={enabled()} onChange={(event) => setEnabled(event.currentTarget.checked)} />
-            <span>{t("enableRule")}</span>
-          </label>
+          <CheckboxField label={t("enableRule")} checked={enabled()} onChange={setEnabled} />
         </Show>
         <div class="btn-group">
           <Show when={ruleId()}>
-            <button class="btn btn-danger" onClick={deleteRule}>{t("delete")}</button>
+            <Button variant="danger" onClick={deleteRule}>{t("delete")}</Button>
           </Show>
-          <button class="btn btn-primary" onClick={save}>{ruleId() ? t("updateRule") : t("saveRule")}</button>
+          <Button variant="primary" onClick={save}>{ruleId() ? t("updateRule") : t("saveRule")}</Button>
         </div>
       </div>
     </div>
@@ -571,7 +415,7 @@ function RulesSidebar() {
         <div class="sidebar-actions">
           <IconButton icon="download" label={t("exportRules")} onClick={() => send({ type: "EXPORT_RULES" })}>{t("exportButton")}</IconButton>
           <IconButton icon="upload" label={t("importRules")} onClick={() => fileInput.click()}>{t("importButton")}</IconButton>
-          <input ref={fileInput} type="file" accept=".json" style={{ display: "none" }} onChange={importRules} />
+          <Input ref={fileInput} type="file" accept=".json" style={{ display: "none" }} onChange={importRules} />
           <IconButton icon="x" label={t("close")} onClick={() => setShowRulesSidebar(false)} />
         </div>
       </div>
@@ -606,14 +450,12 @@ function RuleSidebarItem(props) {
 
   return (
     <div class="rule-item" classList={{ disabled: !props.rule.enabled }} onClick={edit}>
-      <label class="toggle-switch" title={props.rule.enabled ? t("disable") : t("enable")} onClick={(event) => event.stopPropagation()}>
-        <input
-          type="checkbox"
-          checked={!!props.rule.enabled}
-          onChange={(event) => send({ type: "TOGGLE_RULE", ruleId: props.rule.id, enabled: event.currentTarget.checked })}
-        />
-        <span class="toggle-slider" />
-      </label>
+      <ToggleSwitch
+        label={`${props.rule.enabled ? t("disable") : t("enable")}: ${props.rule.name || props.rule.urlPattern || t("unnamed")}`}
+        checked={!!props.rule.enabled}
+        onClick={(event) => event.stopPropagation()}
+        onChange={(checked) => send({ type: "TOGGLE_RULE", ruleId: props.rule.id, enabled: checked })}
+      />
       <div class="rule-item-info">
         <span class="rule-name">
           {props.rule.name || props.rule.urlPattern || t("unnamed")}

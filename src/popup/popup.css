@@ -137,53 +137,6 @@ body {
   text-overflow: ellipsis;
 }
 
-.toggle-switch {
-  position: relative;
-  width: 28px;
-  height: 16px;
-  flex-shrink: 0;
-  cursor: pointer;
-}
-
-.toggle-switch input {
-  opacity: 0;
-  width: 0;
-  height: 0;
-  position: absolute;
-}
-
-.toggle-slider {
-  position: absolute;
-  inset: 0;
-  background: var(--bg-input);
-  border-radius: 8px;
-  border: 1px solid var(--border-light);
-  transition: background 0.18s;
-}
-
-.toggle-slider::before {
-  content: "";
-  position: absolute;
-  left: 2px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  transition: left 0.18s, background 0.18s;
-}
-
-.toggle-switch input:checked + .toggle-slider {
-  background: #1c3a2a;
-  border-color: var(--green);
-}
-
-.toggle-switch input:checked + .toggle-slider::before {
-  left: 14px;
-  background: var(--green);
-}
-
 .empty-state p {
   color: var(--text-dim);
 }

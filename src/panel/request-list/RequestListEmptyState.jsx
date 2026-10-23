@@ -1,6 +1,7 @@
 import { Match, Switch } from "solid-js";
 import { t } from "../../lib/i18n";
 import { EmptyState } from "../../ui/EmptyState";
+import { Button } from "../../ui/Controls";
 
 export function RequestListEmptyState(props) {
   return (
@@ -14,7 +15,7 @@ export function RequestListEmptyState(props) {
         <Match when={props.matchingCount === 0}>
           <EmptyState
             title={t("noMatches")}
-            action={<button type="button" class="btn btn-secondary" onClick={props.onClearFilters}>{t("clearFilters")}</button>}
+            action={<Button variant="secondary" onClick={props.onClearFilters}>{t("clearFilters")}</Button>}
           >
             {t("adjustFilters")}
           </EmptyState>
@@ -22,7 +23,7 @@ export function RequestListEmptyState(props) {
         <Match when={true}>
           <EmptyState
             title={t("hiddenRequests", { count: props.hiddenCount })}
-            action={<button type="button" class="btn btn-secondary" onClick={props.onShowAll}>{t("showAll")}</button>}
+            action={<Button variant="secondary" onClick={props.onShowAll}>{t("showAll")}</Button>}
           >
             {t("hiddenRequestsHint")}
           </EmptyState>

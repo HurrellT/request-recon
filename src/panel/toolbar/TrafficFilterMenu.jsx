@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { Icon } from "../../ui/Icon";
+import { Button, CheckboxField } from "../../ui/Controls";
 
 const TRAFFIC_OPTIONS = [
   ["preflight", "corsPreflights"],
@@ -27,22 +28,18 @@ export function TrafficFilterMenu(props) {
         <div class="traffic-filter-heading">{t("showInList")}</div>
         <For each={TRAFFIC_OPTIONS}>
           {([category, labelKey]) => (
-            <label class="traffic-filter-option">
-              <input
-                type="checkbox"
-                checked={props.visibility[category]}
-                onChange={(event) => props.onToggle(category, event.currentTarget.checked)}
-              />
-              <span>{t(labelKey)}</span>
-              <Show when={props.categoryCounts[category] > 0}>
-                <span class="traffic-category-count">{props.categoryCounts[category]}</span>
-              </Show>
-            </label>
+            <CheckboxField
+              class="traffic-filter-option"
+              label={t(labelKey)}
+              checked={props.visibility[category]}
+              onChange={(checked) => props.onToggle(category, checked)}
+              trailing={<Show when={props.categoryCounts[category] > 0}><span class="traffic-category-count">{props.categoryCounts[category]}</span></Show>}
+            />
           )}
         </For>
         <div class="traffic-filter-actions">
-          <button type="button" class="toolbar-btn" onClick={props.onShowAll}>{t("showAll")}</button>
-          <button type="button" class="toolbar-btn" onClick={props.onHideNoise}>{t("hideNoise")}</button>
+          <Button class="toolbar-btn" onClick={props.onShowAll}>{t("showAll")}</Button>
+          <Button class="toolbar-btn" onClick={props.onHideNoise}>{t("hideNoise")}</Button>
         </div>
       </div>
     </details>

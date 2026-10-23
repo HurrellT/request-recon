@@ -7,6 +7,7 @@ import { shortPattern } from "../lib/request-utils";
 import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
 import { MethodBadge } from "../ui/Badges";
 import { EmptyState } from "../ui/EmptyState";
+import { Button, FieldLabel, Select, ToggleSwitch } from "../ui/Controls";
 
 function PopupApp() {
   const [rules, setRules] = createSignal([]);
@@ -75,10 +76,11 @@ function PopupApp() {
             <For each={rules()}>
               {(rule) => (
                 <div class="rule-row" classList={{ disabled: !rule.enabled }}>
-                  <label class="toggle-switch" title={rule.enabled ? t("disable") : t("enable")}>
-                    <input type="checkbox" checked={!!rule.enabled} onChange={(event) => toggleRule(rule.id, event.currentTarget.checked)} />
-                    <span class="toggle-slider" />
-                  </label>
+                  <ToggleSwitch
+                    label={`${rule.enabled ? t("disable") : t("enable")}: ${rule.name || rule.urlPattern || t("unnamed")}`}
+                    checked={!!rule.enabled}
+                    onChange={(checked) => toggleRule(rule.id, checked)}
+                  />
                   <div class="rule-info">
                     <div class="rule-name" title={rule.name || rule.urlPattern || ""}>
                       {rule.name || rule.urlPattern || t("unnamed")}
@@ -102,15 +104,15 @@ function PopupApp() {
       <footer class="popup-footer">
         <span class="footer-hint">{t("popupFooter")}</span>
         <Show when={rules().length > 0}>
-          <button class="btn-all" onClick={toggleAll}>{anyActive() ? t("disableAll") : t("enableAll")}</button>
+          <Button class="btn-all" onClick={toggleAll}>{anyActive() ? t("disableAll") : t("enableAll")}</Button>
         </Show>
       </footer>
       <div class="popup-language">
-        <label for="popup-language">{t("language")}</label>
-        <select id="popup-language" value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
+        <FieldLabel for="popup-language">{t("language")}</FieldLabel>
+        <Select id="popup-language" value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
           <option value="es">Español</option>
           <option value="en">English</option>
-        </select>
+        </Select>
       </div>
     </div>
   );

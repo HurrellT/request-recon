@@ -1,5 +1,6 @@
 import { createSignal, createUniqueId } from "solid-js";
 import { Icon } from "./Icon";
+import { Button } from "./Controls";
 
 export function CollapsibleSection(props) {
   const [collapsed, setCollapsed] = createSignal(false);
@@ -8,8 +9,7 @@ export function CollapsibleSection(props) {
   return (
     <section class="section" classList={{ collapsed: collapsed() }}>
       <h3 class="section-heading">
-        <button
-          type="button"
+        <Button
           class="section-header"
           aria-expanded={!collapsed()}
           aria-controls={bodyId}
@@ -17,7 +17,7 @@ export function CollapsibleSection(props) {
         >
           <span>{props.title}</span>
           <Icon name="chevron-down" class="section-toggle" />
-        </button>
+        </Button>
       </h3>
       <div id={bodyId} class="section-body" hidden={collapsed()}>{props.children}</div>
     </section>

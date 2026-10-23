@@ -1,12 +1,13 @@
 import { t } from "../../lib/i18n";
 import { Icon } from "../../ui/Icon";
+import { FieldLabel, Input } from "../../ui/Controls";
 
 export function RequestSearch(props) {
   return (
     <div class="toolbar-search-field">
-      <label for="filter-input" class="sr-only">{t("searchLabel")}</label>
+      <FieldLabel for="filter-input" class="sr-only">{t("searchLabel")}</FieldLabel>
       <Icon name="search" />
-      <input
+      <Input
         type="text"
         id="filter-input"
         placeholder={t("searchPlaceholder")}

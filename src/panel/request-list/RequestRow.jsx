@@ -2,6 +2,7 @@ import { createMemo, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { getBodySummary, getPath, getResponseOutcome, statusDotClass } from "../../lib/request-utils";
 import { MethodBadge, StatusBadge } from "../../ui/Badges";
+import { Button } from "../../ui/Controls";
 import { RequestRuleState } from "./RequestRuleState";
 
 export function RequestRow(props) {
@@ -13,8 +14,7 @@ export function RequestRow(props) {
   });
 
   return (
-    <button
-      type="button"
+    <Button
       class="request-item"
       classList={{
         selected: props.selected,
@@ -39,6 +39,6 @@ export function RequestRow(props) {
       <Show when={subLabel()}>
         {(label) => <span class="req-row-sub" classList={{ "is-gql": label().isGql }}>{label().text}</span>}
       </Show>
-    </button>
+    </Button>
   );
 }

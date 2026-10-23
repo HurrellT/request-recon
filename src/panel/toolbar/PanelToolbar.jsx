@@ -1,6 +1,7 @@
 import { createMemo } from "solid-js";
 import { chooseLanguage, language, t } from "../../lib/i18n";
 import { Icon } from "../../ui/Icon";
+import { Button } from "../../ui/Controls";
 import {
   clearRequests,
   filterText,
@@ -32,10 +33,10 @@ export function PanelToolbar() {
     <header id="toolbar">
       <div class="toolbar-capture">
         <RecordingControl recording={isRecording()} onToggle={() => send({ type: isRecording() ? "STOP" : "START" })} />
-        <button type="button" class="toolbar-btn" title={t("clearTitle")} onClick={clearRequests}>
+        <Button class="toolbar-btn" title={t("clearTitle")} onClick={clearRequests}>
           <Icon name="trash" />
           <span>{t("clear")}</span>
-        </button>
+        </Button>
       </div>
 
       <div class="toolbar-search">

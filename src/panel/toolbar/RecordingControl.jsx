@@ -1,9 +1,9 @@
 import { t } from "../../lib/i18n";
+import { Button } from "../../ui/Controls";
 
 export function RecordingControl(props) {
   return (
-    <button
-      type="button"
+    <Button
       id="record-btn"
       classList={{ active: props.recording }}
       aria-pressed={props.recording}
@@ -12,6 +12,6 @@ export function RecordingControl(props) {
     >
       <span id="record-dot" aria-hidden="true" />
       <span id="record-label">{props.recording ? t("stop") : t("start")}</span>
-    </button>
+    </Button>
   );
 }
