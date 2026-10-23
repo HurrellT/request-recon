@@ -140,6 +140,8 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
 
   // Apply matching rule or pass through — do CDP calls FIRST so we know if they succeeded
   let ruleApplied = false;
+  let appliedStatus = null;
+  let networkFailureApplied = false;
   const port = panelPorts.get(tabId);
 
   if (matched?.enabled) {
@@ -150,6 +152,7 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
     if (matched.blockRequest) {
       if (matched.blockType === 'network-fail') {
         ok = await safeCDP(tabId, 'Fetch.failRequest', { requestId, errorReason: 'Failed' });
+        if (ok) networkFailureApplied = true;
       } else {
         const errorStatus = matched.blockStatus || matched.statusCode || 500;
         let currentLanguage = normalizeLanguage(chrome.i18n.getUILanguage());
@@ -164,6 +167,7 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
           responseHeaders: stripEncodingHeaders(baseHeaders),
           body: encodeBody(errorBody)
         });
+        if (ok) appliedStatus = errorStatus;
       }
     } else {
       const overrideBody = matched.resBody != null ? matched.resBody : resBody;
@@ -177,6 +181,7 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
         responseHeaders: stripEncodingHeaders(baseHeaders),
         body: encodeBody(overrideBody)
       });
+      if (ok) appliedStatus = overrideStatus;
     }
 
     if (ok) {
@@ -207,11 +212,14 @@ chrome.debugger.onEvent.addListener(async (source, method, params) => {
           reqHeaders: request.headers,
           reqBody: request.postData || '',
           resStatus: responseStatusCode,
+          appliedStatus,
+          networkFailureApplied,
           resHeaders: responseHeaders || [],
           resBody,
           graphql,
           ruleId: matched?.id ?? null,
           ruleApplied,
+          appliedBlockRequest: ruleApplied && !!matched?.blockRequest,
           ts: Date.now()
         }
       });

@@ -4,26 +4,25 @@ import "../styles.css";
 import "../ui/ui.css";
 import "./panel.css";
 import "./toolbar/toolbar.css";
+import "./request-list/request-list.css";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { MethodBadge, StatusBadge } from "../ui/Badges";
 import { EmptyState } from "../ui/EmptyState";
 import { CollapsibleSection } from "../ui/CollapsibleSection";
 import { PanelToolbar } from "./toolbar/PanelToolbar";
+import { RequestList } from "./request-list/RequestList";
 import {
   activeTab,
   applyTrafficVisibility,
   directEditRule,
   findMatchingRuleForRequest,
   findRule,
-  hiddenRequestCount,
-  matchingRequests,
   requests,
   rules,
   selectedRequest,
   send,
   setActiveTab,
-  setAllTrafficVisible,
   setDirectEditRule,
   setSelectedId,
   setShowRulesSidebar,
@@ -31,19 +30,16 @@ import {
   showRulesSidebar,
   showToast,
   toast,
-  visibleRequests,
 } from "./store";
 import { usePort } from "./usePort";
 import { initializeLanguage, language, t } from "../lib/i18n";
 import {
   HTTP_METHODS,
-  getBodySummary,
   getPath,
-  getRequestLabel,
+  getResponseOutcome,
   headersToEntries,
   prettyJSON,
   ruleMatchesRequest,
-  statusDotClass,
   suggestBodyFilter,
   truncate,
   tryFormatJSON,
@@ -101,76 +97,6 @@ function PanelApp() {
   );
 }
 
-function RequestList() {
-  return (
-    <div id="request-list-panel">
-      <div id="request-list-header">
-        <span>{t("requests")}</span>
-        <span id="request-count" title={t("visibleMatchesTitle")}>{visibleRequests().length}/{matchingRequests().length}</span>
-      </div>
-      <div id="request-list">
-        <Show
-          when={visibleRequests().length > 0}
-          fallback={
-            <EmptyState
-              title={requests().length === 0 ? t("noRequests") : hiddenRequestCount() > 0 ? t("hiddenRequests", { count: hiddenRequestCount() }) : t("noMatches")}
-              action={<Show when={hiddenRequestCount() > 0}><button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button></Show>}
-            >
-              <Show when={requests().length === 0}>
-                {t("pressStart")} <strong>{t("start")}</strong> {t("toBegin")}
-              </Show>
-            </EmptyState>
-          }
-        >
-          <For each={visibleRequests()}>{(req) => <RequestItem req={req} />}</For>
-        </Show>
-      </div>
-    </div>
-  );
-}
-
-function RequestItem(props) {
-  const matchedRule = createMemo(() => (props.req.ruleId ? findRule(props.req.ruleId) : null) ?? findMatchingRuleForRequest(props.req));
-  const hasActiveRule = createMemo(() => !!matchedRule()?.enabled);
-  const wasIntercepted = createMemo(() => props.req.ruleApplied === true || (!!(props.req.ruleId && hasActiveRule()) && props.req.ruleApplied == null));
-  const subLabel = createMemo(() => {
-    if (props.req.graphql) return { text: props.req.graphql.operationName || "GraphQL", isGql: true };
-    const summary = getBodySummary(props.req);
-    return summary ? { text: summary, isGql: false } : null;
-  });
-
-  return (
-    <div
-      class="request-item"
-      classList={{
-        selected: props.req.id === selectedRequest()?.id,
-        modified: wasIntercepted(),
-        "has-active-rule": !wasIntercepted() && hasActiveRule(),
-      }}
-      title={props.req.url}
-      onClick={() => {
-        setSelectedId(props.req.id);
-        setDirectEditRule(null);
-      }}
-    >
-      <div class="req-row-main">
-        <MethodBadge method={props.req.method} />
-        <span class="request-url">{getPath(props.req.url)}</span>
-        <span class={`status-dot ${statusDotClass(props.req.resStatus)}`} title={props.req.resStatus} />
-        <Show when={wasIntercepted()}>
-          <span class="rule-active-icon" role="img" aria-label={t("interceptedTitle")} title={t("interceptedTitle")}><Icon name="bolt" size="sm" /></span>
-        </Show>
-        <Show when={!wasIntercepted() && hasActiveRule()}>
-          <span class="rule-active-icon rule-pending-icon" role="img" aria-label={t("pendingRuleTitle")} title={t("pendingRuleTitle")}><Icon name="clock" size="sm" /></span>
-        </Show>
-      </div>
-      <Show when={subLabel()}>
-        {(label) => <div class="req-row-sub" classList={{ "is-gql": label().isGql }}>{label().text}</div>}
-      </Show>
-    </div>
-  );
-}
-
 function DetailPanel() {
   const current = createMemo(() => selectedRequest());
   const direct = createMemo(() => directEditRule());
@@ -179,9 +105,11 @@ function DetailPanel() {
     const req = current();
     if (req) {
       const wasModified = req.ruleApplied === true || (req.ruleApplied == null && !!(req.ruleId && findRule(req.ruleId)?.enabled));
+      const outcome = getResponseOutcome(req);
       return {
         method: req.method,
-        status: req.resStatus,
+        status: outcome.networkFailure ? t("networkFailureShort") : outcome.status ?? "-",
+        statusTone: outcome.networkFailure ? "error" : undefined,
         graphql: req.graphql?.operationName,
         modified: wasModified,
         url: req.url,
@@ -192,6 +120,7 @@ function DetailPanel() {
     return {
       method: rule?.method && rule.method !== "*" ? rule.method : "-",
       status: rule?.statusCode || "-",
+      statusTone: undefined,
       graphql: rule?.operationName,
       modified: false,
       url: rule?.urlPattern || rule?.name || "",
@@ -212,7 +141,7 @@ function DetailPanel() {
         <div id="detail-header">
           <div class="detail-meta">
             <MethodBadge method={header().method} detail />
-            <StatusBadge status={header().status} />
+            <StatusBadge status={header().status} tone={header().statusTone} />
             <Show when={header().graphql}>
               <span class="detail-graphql-op">{header().graphql}</span>
             </Show>

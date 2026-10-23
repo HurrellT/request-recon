@@ -42,6 +42,7 @@
 .status-badge.ok { background: #1c3a2a; color: var(--green); }
 .status-badge.redir { background: #2a2a1a; color: var(--yellow); }
 .status-badge.error { background: var(--red-dim); color: var(--red); }
+.status-badge.pending { background: #2a2a2a; color: var(--text-muted); }
 
 .empty-state {
   padding: 24px 16px;

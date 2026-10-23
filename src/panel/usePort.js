@@ -65,7 +65,7 @@ function injectPageToast(reqData, rule) {
   const payload = JSON.stringify({
     method: reqData.method,
     label,
-    status: String(rule.statusCode || reqData.resStatus || ""),
+    status: reqData.networkFailureApplied ? t("networkFailureShort") : String(reqData.appliedStatus ?? reqData.resStatus ?? ""),
     boltPath,
   });
 

@@ -26,6 +26,18 @@ export function statusBadgeClass(code) {
   return "ok";
 }
 
+export function getResponseOutcome(req) {
+  if (req?.networkFailureApplied) return { status: null, networkFailure: true };
+  return { status: req?.appliedStatus ?? req?.resStatus ?? null, networkFailure: false };
+}
+
+export function requestRuleState(req, matchedRule) {
+  const active = !!matchedRule?.enabled;
+  const applied = req.ruleApplied === true || (req.ruleApplied == null && !!req.ruleId && active);
+  if (applied) return (req.appliedBlockRequest ?? matchedRule?.blockRequest) ? "blocked" : "intercepted";
+  return active ? "pending" : null;
+}
+
 export function getRequestLabel(req) {
   return req.graphql?.operationName || getPath(req.url);
 }
