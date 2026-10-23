@@ -26,3 +26,7 @@ The filters only change the list: requests remain captured and response override
 ## Languages
 
 The panel and extension popup support English and Spanish. They start in the browser's language (English for other browser languages). Use the **EN / ES** selector in the panel or the language selector in the popup to change it. The choice is saved in Chrome's local extension storage and shared between both views.
+
+## License
+
+Request Recon source code is licensed under the Mozilla Public License 2.0; see [LICENSE](LICENSE). Third-party assets and libraries retain their own licenses. Tabler Icons and bundled library notices are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). Both notice files are included in the built extension.
