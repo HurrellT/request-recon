@@ -1,0 +1,5 @@
+{
+  "extensionDescription": {
+    "message": "Intercepta y modifica respuestas de red en tiempo real. Compatible con GraphQL. Para desarrollo frontend y testing."
+  }
+}

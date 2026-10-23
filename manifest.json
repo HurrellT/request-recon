@@ -2,7 +2,8 @@
   "manifest_version": 3,
   "name": "Request Recon",
   "version": "1.0.0",
-  "description": "Intercepta y modifica respuestas de red en tiempo real. Compatible con GraphQL. Para desarrollo frontend y testing.",
+  "default_locale": "es",
+  "description": "__MSG_extensionDescription__",
   "permissions": [
     "debugger",
     "storage",
