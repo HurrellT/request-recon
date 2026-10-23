@@ -118,22 +118,6 @@ body {
   gap: 5px;
 }
 
-.method-badge {
-  font-size: 9px;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  padding: 1px 4px;
-  border-radius: 2px;
-  flex-shrink: 0;
-}
-
-.method-get { background: #1c3a2a; color: #4ec9b0; }
-.method-post { background: #1a2d4a; color: #569cd6; }
-.method-put { background: #3a2a1a; color: #ce9178; }
-.method-patch { background: #2a1a3a; color: #c586c0; }
-.method-delete { background: #3a1a1a; color: #f44747; }
-.method-other { background: #2a2a2a; color: #858585; }
-
 .rule-url {
   font-size: 10px;
   color: var(--text-dim);
@@ -200,16 +184,7 @@ body {
   background: var(--green);
 }
 
-.empty-state {
-  padding: 24px 16px;
-  text-align: center;
-  color: var(--text-muted);
-  line-height: 1.6;
-}
-
 .empty-state p {
-  margin-top: 6px;
-  font-size: 11px;
   color: var(--text-dim);
 }
 

@@ -1,6 +1,6 @@
 # DevTools UI review and component plan
 
-Status: **section plan accepted; MPL 2.0 chosen for the core; Tabler Icons chosen for the UI; UI implementation pending**. Branch: `codex/devtools-ui-components`.
+Status: **section 1 implemented and awaiting review; sections 2–7 pending**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
 
 ## Current shape
 
@@ -49,6 +49,6 @@ Run `npm test` and `npm run build` after each section. Review the affected inter
 - The seven sections and their order are accepted as review stops.
 - The popup receives the same visual refresh in section 7.
 - Keyboard and accessibility fixes and narrow-width improvements are included in the relevant sections.
-- MPL 2.0 is the selected license for the open core. Tabler is the selected icon family. License files and distribution notices are prepared; section 1 will add the selected icons and verify the built package. Keep all changes uncommitted for review.
+- MPL 2.0 is the selected license for the open core. Section 1 adds locally bundled Tabler icons, shared UI components, visible focus styles, and accessible disclosure buttons. The production build includes `LICENSE` and `THIRD_PARTY_NOTICES.txt`. Keep all changes uncommitted for review.
 
 No commits will be made; the user reviews and commits the changes.

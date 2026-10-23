@@ -1,7 +1,13 @@
 import { render } from "solid-js/web";
 import { createEffect, createMemo, createSignal, For, Match, onCleanup, onMount, Show, Switch } from "solid-js";
 import "../styles.css";
+import "../ui/ui.css";
 import "./panel.css";
+import { Icon } from "../ui/Icon";
+import { IconButton } from "../ui/IconButton";
+import { MethodBadge, StatusBadge } from "../ui/Badges";
+import { EmptyState } from "../ui/EmptyState";
+import { CollapsibleSection } from "../ui/CollapsibleSection";
 import {
   activeTab,
   applyTrafficVisibility,
@@ -41,10 +47,8 @@ import {
   getPath,
   getRequestLabel,
   headersToEntries,
-  methodCSSClass,
   prettyJSON,
   ruleMatchesRequest,
-  statusBadgeClass,
   statusDotClass,
   suggestBodyFilter,
   truncate,
@@ -186,17 +190,14 @@ function RequestList() {
         <Show
           when={visibleRequests().length > 0}
           fallback={
-            <div class="empty-state">
-              <div>{requests().length === 0 ? t("noRequests") : hiddenRequestCount() > 0 ? t("hiddenRequests", { count: hiddenRequestCount() }) : t("noMatches")}</div>
-              <Show when={hiddenRequestCount() > 0}>
-                <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button>
-              </Show>
+            <EmptyState
+              title={requests().length === 0 ? t("noRequests") : hiddenRequestCount() > 0 ? t("hiddenRequests", { count: hiddenRequestCount() }) : t("noMatches")}
+              action={<Show when={hiddenRequestCount() > 0}><button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button></Show>}
+            >
               <Show when={requests().length === 0}>
-                <p>
-                  {t("pressStart")} <strong>{t("start")}</strong> {t("toBegin")}
-                </p>
+                {t("pressStart")} <strong>{t("start")}</strong> {t("toBegin")}
               </Show>
-            </div>
+            </EmptyState>
           }
         >
           <For each={visibleRequests()}>{(req) => <RequestItem req={req} />}</For>
@@ -231,14 +232,14 @@ function RequestItem(props) {
       }}
     >
       <div class="req-row-main">
-        <span class={`method-badge ${methodCSSClass(props.req.method)}`}>{props.req.method}</span>
+        <MethodBadge method={props.req.method} />
         <span class="request-url">{getPath(props.req.url)}</span>
         <span class={`status-dot ${statusDotClass(props.req.resStatus)}`} title={props.req.resStatus} />
         <Show when={wasIntercepted()}>
-          <span class="rule-active-icon" title={t("interceptedTitle")}>◆</span>
+          <span class="rule-active-icon" role="img" aria-label={t("interceptedTitle")} title={t("interceptedTitle")}><Icon name="bolt" size="sm" /></span>
         </Show>
         <Show when={!wasIntercepted() && hasActiveRule()}>
-          <span class="rule-active-icon rule-pending-icon" title={t("pendingRuleTitle")}>◈</span>
+          <span class="rule-active-icon rule-pending-icon" role="img" aria-label={t("pendingRuleTitle")} title={t("pendingRuleTitle")}><Icon name="clock" size="sm" /></span>
         </Show>
       </div>
       <Show when={subLabel()}>
@@ -258,9 +259,7 @@ function DetailPanel() {
       const wasModified = req.ruleApplied === true || (req.ruleApplied == null && !!(req.ruleId && findRule(req.ruleId)?.enabled));
       return {
         method: req.method,
-        methodClass: methodCSSClass(req.method),
         status: req.resStatus,
-        statusClass: statusBadgeClass(req.resStatus),
         graphql: req.graphql?.operationName,
         modified: wasModified,
         url: req.url,
@@ -270,9 +269,7 @@ function DetailPanel() {
     const rule = direct();
     return {
       method: rule?.method && rule.method !== "*" ? rule.method : "-",
-      methodClass: methodCSSClass(rule?.method || "other"),
       status: rule?.statusCode || "-",
-      statusClass: "ok",
       graphql: rule?.operationName,
       modified: false,
       url: rule?.urlPattern || rule?.name || "",
@@ -285,23 +282,20 @@ function DetailPanel() {
         when={hasDetail()}
         fallback={
           <div id="no-selection">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-              <polyline points="13 2 13 9 20 9" />
-            </svg>
+            <Icon name="file-description" size="lg" />
             <div>{t("selectRequest")}</div>
           </div>
         }
       >
         <div id="detail-header">
           <div class="detail-meta">
-            <span class={`detail-method ${header().methodClass}`}>{header().method}</span>
-            <span class={`status-badge ${header().statusClass}`}>{header().status}</span>
+            <MethodBadge method={header().method} detail />
+            <StatusBadge status={header().status} />
             <Show when={header().graphql}>
               <span class="detail-graphql-op">{header().graphql}</span>
             </Show>
             <Show when={header().modified}>
-              <span class="modified-badge">⚡ {t("modified")}</span>
+              <span class="modified-badge"><Icon name="bolt" size="sm" /> {t("modified")}</span>
             </Show>
           </div>
           <div id="detail-url">{header().url}</div>
@@ -327,19 +321,6 @@ function DetailPanel() {
   );
 }
 
-function Section(props) {
-  const [collapsed, setCollapsed] = createSignal(false);
-  return (
-    <div class="section" classList={{ collapsed: collapsed() }}>
-      <div class="section-header" onClick={() => setCollapsed((value) => !value)}>
-        <span>{props.title}</span>
-        <span class="section-toggle">▾</span>
-      </div>
-      <div class="section-body">{props.children}</div>
-    </div>
-  );
-}
-
 function HeadersDisplay(props) {
   const entries = createMemo(() => headersToEntries(props.headers));
   return (
@@ -361,16 +342,16 @@ function HeadersDisplay(props) {
 function RequestTab(props) {
   return (
     <>
-      <Section title={t("requestHeaders")}>
+      <CollapsibleSection title={t("requestHeaders")}>
         <HeadersDisplay headers={props.req.reqHeaders} />
-      </Section>
+      </CollapsibleSection>
       <Show when={props.req.reqBody?.trim()}>
-        <Section title={t("requestBody")}>
+        <CollapsibleSection title={t("requestBody")}>
           <pre class="code-block">{prettyJSON(props.req.reqBody)}</pre>
-        </Section>
+        </CollapsibleSection>
       </Show>
       <Show when={props.req.graphql}>
-        <Section title="GraphQL">
+        <CollapsibleSection title="GraphQL">
           <Show when={props.req.graphql.operationName}>
             <div style={{ "margin-bottom": "8px" }}>
               <span style={{ color: "var(--text-muted)", "font-size": "11px" }}>{t("operation")}</span>{" "}
@@ -384,7 +365,7 @@ function RequestTab(props) {
             <div style={{ "margin-top": "8px", "font-size": "11px", color: "var(--text-muted)", "text-transform": "uppercase", "letter-spacing": ".4px" }}>{t("variables")}</div>
             <pre class="code-block" style={{ "margin-top": "4px" }}>{prettyJSON(JSON.stringify(props.req.graphql.variables))}</pre>
           </Show>
-        </Section>
+        </CollapsibleSection>
       </Show>
     </>
   );
@@ -393,14 +374,14 @@ function RequestTab(props) {
 function ResponseTab(props) {
   return (
     <>
-      <Section title={t("responseHeaders")}>
+      <CollapsibleSection title={t("responseHeaders")}>
         <HeadersDisplay headers={props.req.resHeaders} />
-      </Section>
-      <Section title={t("responseBodySection")}>
+      </CollapsibleSection>
+      <CollapsibleSection title={t("responseBodySection")}>
         <Show when={props.req.resBody} fallback={<span style={{ color: "var(--text-dim)" }}>{t("noBody")}</span>}>
           <pre class="code-block">{prettyJSON(props.req.resBody)}</pre>
         </Show>
-      </Section>
+      </CollapsibleSection>
     </>
   );
 }
@@ -494,9 +475,9 @@ function RuleEditor(props) {
     <div class="rule-editor">
       <Show when={props.req}>
         <Switch>
-          <Match when={wasIntercepted()}><div class="rule-banner intercepted">{t("interceptedBanner")}</div></Match>
-          <Match when={existingRule()}><div class="rule-banner pending">{t("pendingBanner")}</div></Match>
-          <Match when={true}><div class="rule-banner new-rule">{t("newRuleBanner")}</div></Match>
+          <Match when={wasIntercepted()}><div class="rule-banner intercepted"><Icon name="bolt" />{t("interceptedBanner")}</div></Match>
+          <Match when={existingRule()}><div class="rule-banner pending"><Icon name="clock" />{t("pendingBanner")}</div></Match>
+          <Match when={true}><div class="rule-banner new-rule"><Icon name="pencil" />{t("newRuleBanner")}</div></Match>
         </Switch>
       </Show>
 
@@ -590,21 +571,19 @@ function RuleEditor(props) {
           <div class="body-header">
             <label>{t("responseBody")}</label>
             <div style={{ display: "flex", gap: "4px" }}>
-              <button
-                class="btn-icon"
-                title={t("formatJSON")}
+              <IconButton
+                icon="braces"
+                label={t("formatJSON")}
                 onClick={() => {
                   const formatted = tryFormatJSON(responseBody());
                   if (formatted !== null) setResponseBody(formatted);
                   else showToast(t("invalidJSONFormat"), "error");
                 }}
-              >
-                {"{ }"}
-              </button>
+              />
               <Show when={props.req?.resBody}>
-                <button class="btn-icon" title={t("restoreResponse")} onClick={() => setResponseBody(prettyJSON(props.req?.resBody ?? ""))}>
+                <IconButton icon="restore" label={t("restoreResponse")} onClick={() => setResponseBody(prettyJSON(props.req?.resBody ?? ""))}>
                   {t("reset")}
-                </button>
+                </IconButton>
               </Show>
             </div>
           </div>
@@ -694,7 +673,10 @@ function Diagnostics(props) {
             <For each={props.diag.rows}>
               {(row) => (
                 <tr>
-                  <td class="diag-icon">{row.ok ? "✅" : "❌"}</td>
+                  <td class={`diag-icon ${row.ok ? "pass" : "fail"}`}>
+                    <Icon name={row.ok ? "circle-check" : "circle-x"} />
+                    <span class="sr-only">{row.ok ? t("diagnosticPass") : t("diagnosticFail")}</span>
+                  </td>
                   <td class="diag-label">{row.label}</td>
                   <td class="diag-value">
                     {row.value}
@@ -736,22 +718,19 @@ function RulesSidebar() {
       <div class="sidebar-header">
         <span>{t("savedRules")}</span>
         <div class="sidebar-actions">
-          <button class="btn-icon" title={t("exportRules")} onClick={() => send({ type: "EXPORT_RULES" })}>{t("exportButton")}</button>
-          <button class="btn-icon" title={t("importRules")} onClick={() => fileInput.click()}>{t("importButton")}</button>
+          <IconButton icon="download" label={t("exportRules")} onClick={() => send({ type: "EXPORT_RULES" })}>{t("exportButton")}</IconButton>
+          <IconButton icon="upload" label={t("importRules")} onClick={() => fileInput.click()}>{t("importButton")}</IconButton>
           <input ref={fileInput} type="file" accept=".json" style={{ display: "none" }} onChange={importRules} />
-          <button class="btn-icon" title={t("close")} onClick={() => setShowRulesSidebar(false)}>✕</button>
+          <IconButton icon="x" label={t("close")} onClick={() => setShowRulesSidebar(false)} />
         </div>
       </div>
       <div id="rules-list">
         <Show
           when={rules().length > 0}
           fallback={
-            <div class="empty-state">
-              <div>{t("noRules")}</div>
-              <p>
-                {t("noRulesPanel")} <strong>{t("ruleTab")}</strong>
-              </p>
-            </div>
+            <EmptyState title={t("noRules")}>
+              {t("noRulesPanel")} <strong>{t("ruleTab")}</strong>
+            </EmptyState>
           }
         >
           <For each={rules()}>{(rule) => <RuleSidebarItem rule={rule} />}</For>
@@ -787,11 +766,11 @@ function RuleSidebarItem(props) {
       <div class="rule-item-info">
         <span class="rule-name">
           {props.rule.name || props.rule.urlPattern || t("unnamed")}
-          <Show when={props.rule.blockRequest}> <span style={{ color: "var(--red)", "font-size": "10px" }}>⊘</span></Show>
+          <Show when={props.rule.blockRequest}> <span class="rule-block-icon" role="img" aria-label={t("blockedRuleTitle")} title={t("blockedRuleTitle")}><Icon name="ban" size="sm" /></span></Show>
         </span>
         <div class="rule-meta">
           <Show when={props.rule.method && props.rule.method !== "*"}>
-            <span class={`method-badge ${methodCSSClass(props.rule.method)}`}>{props.rule.method}</span>
+            <MethodBadge method={props.rule.method} />
           </Show>
           <Show when={props.rule.operationName}>
             <span class="graphql-op">{props.rule.operationName}</span>
@@ -800,17 +779,16 @@ function RuleSidebarItem(props) {
         </div>
       </div>
       <span class="rule-edit-hint">{t("editRule")}</span>
-      <button
-        class="btn-icon rule-delete-btn"
-        title={t("delete")}
+      <IconButton
+        icon="trash"
+        label={t("delete")}
+        class="rule-delete-btn"
         onClick={(event) => {
           event.stopPropagation();
           send({ type: "DELETE_RULE", ruleId: props.rule.id });
           showToast(t("ruleDeleted"), "success");
         }}
-      >
-        ✕
-      </button>
+      />
     </div>
   );
 }

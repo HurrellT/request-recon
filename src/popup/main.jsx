@@ -1,9 +1,12 @@
 import { render } from "solid-js/web";
 import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
 import "../styles.css";
+import "../ui/ui.css";
 import "./popup.css";
-import { methodCSSClass, shortPattern } from "../lib/request-utils";
+import { shortPattern } from "../lib/request-utils";
 import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
+import { MethodBadge } from "../ui/Badges";
+import { EmptyState } from "../ui/EmptyState";
 
 function PopupApp() {
   const [rules, setRules] = createSignal([]);
@@ -66,10 +69,7 @@ function PopupApp() {
           <Show
             when={rules().length > 0}
             fallback={
-              <div class="empty-state">
-                <div>{t("noRules")}</div>
-                <p>{t("noRulesPopup")}</p>
-              </div>
+              <EmptyState title={t("noRules")}>{t("noRulesPopup")}</EmptyState>
             }
           >
             <For each={rules()}>
@@ -85,7 +85,7 @@ function PopupApp() {
                     </div>
                     <div class="rule-meta">
                       <Show when={rule.method && rule.method !== "*"}>
-                        <span class={`method-badge ${methodCSSClass(rule.method)}`}>{rule.method}</span>
+                        <MethodBadge method={rule.method} />
                       </Show>
                       <Show when={rule.operationName} fallback={<span class="rule-url" title={rule.urlPattern}>{shortPattern(rule.urlPattern)}</span>}>
                         <span class="gql-op" title={rule.operationName}>{rule.operationName}</span>

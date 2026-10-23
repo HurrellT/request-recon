@@ -2,6 +2,7 @@ import { onCleanup, onMount } from "solid-js";
 import { addRequest, downloadJSON, findRule, setIsRecording, setPort, setRules, showToast } from "./store";
 import { getPath } from "../lib/request-utils";
 import { t } from "../lib/i18n";
+import boltSvg from "../assets/icons/bolt.svg?raw";
 
 export function usePort(tabId) {
   let reconnectTimer = null;
@@ -59,10 +60,13 @@ export function usePort(tabId) {
 
 function injectPageToast(reqData, rule) {
   const label = rule.name || reqData.graphql?.operationName || getPath(reqData.url);
+  // Read the vector path from the same bundled Tabler asset used by the panel.
+  const boltPath = boltSvg.match(/<path d="([^"]+)"/)?.[1] ?? "";
   const payload = JSON.stringify({
     method: reqData.method,
     label,
     status: String(rule.statusCode || reqData.resStatus || ""),
+    boltPath,
   });
 
   const script = `
@@ -104,9 +108,19 @@ function injectPageToast(reqData, rule) {
         animation: '__rr_in 0.18s ease'
       });
 
-      const icon = document.createElement('span');
-      icon.textContent = '⚡';
-      Object.assign(icon.style, { fontSize: '15px', flexShrink: '0', marginTop: '1px' });
+      const svgNS = 'http://www.w3.org/2000/svg';
+      const icon = document.createElementNS(svgNS, 'svg');
+      icon.setAttribute('viewBox', '0 0 24 24');
+      icon.setAttribute('fill', 'none');
+      icon.setAttribute('stroke', 'currentColor');
+      icon.setAttribute('stroke-width', '2');
+      icon.setAttribute('stroke-linecap', 'round');
+      icon.setAttribute('stroke-linejoin', 'round');
+      icon.setAttribute('aria-hidden', 'true');
+      const iconPath = document.createElementNS(svgNS, 'path');
+      iconPath.setAttribute('d', d.boltPath);
+      icon.appendChild(iconPath);
+      Object.assign(icon.style, { width: '16px', height: '16px', color: '#4ec9b0', flexShrink: '0', marginTop: '1px' });
 
       const body = document.createElement('div');
       Object.assign(body.style, { minWidth: '0' });
@@ -133,7 +147,7 @@ function injectPageToast(reqData, rule) {
 
       if (d.status) {
         const statusNode = document.createElement('span');
-        statusNode.textContent = ' → ' + d.status;
+        statusNode.textContent = ' (' + d.status + ')';
         Object.assign(statusNode.style, { color: '#858585', fontSize: '11px' });
         info.appendChild(statusNode);
       }
