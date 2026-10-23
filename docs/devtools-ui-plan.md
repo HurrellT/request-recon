@@ -1,13 +1,13 @@
 # DevTools UI review and component plan
 
-Status: **section 1 implemented and awaiting review; sections 2–7 pending**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
+Status: **section 1 committed by the user; section 2 implemented and awaiting review; sections 3–7 pending**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
 
 ## Current shape
 
-- The DevTools UI is concentrated in `src/panel/main.jsx` (819 lines) and `src/panel/panel.css` (934 lines). `PanelApp` owns setup, toolbar, three-pane layout, and toast rendering.
+- At planning time, the DevTools UI was concentrated in `src/panel/main.jsx` (819 lines) and `src/panel/panel.css` (934 lines). Section 2 extracts the toolbar controls and their styles from those files.
 - `src/panel/store.js` holds shared panel state; `src/panel/usePort.js` handles the DevTools connection and also injects a notification into the inspected page.
 - The extension popup has its own rule list and styles. It is a separate surface, but its method badge and rule toggle are candidates for reuse.
-- Visual symbols are inconsistent: `⚡`, `✅`, `❌`, `◆`, `◈`, `⊘`, `✕`, `▾`, text substitutes, and one custom SVG. The inspected-page notification also uses `⚡`.
+- The original UI used inconsistent visual symbols. Section 1 replaced them with Tabler Icons in the panel and inspected-page notification.
 - Baseline on this branch: `npm test` passes (6 tests); `npm run build` succeeds.
 
 ## Icon choice and license handling
@@ -16,7 +16,7 @@ Status: **section 1 implemented and awaiting review; sections 2–7 pending**. M
 
 Tabler is free for personal and commercial use under MIT. Its license requires retaining the copyright and license notice with copies or substantial portions. Keep Tabler's icon files and license identity separate from Request Recon's MPL-covered source. The exact Tabler copyright and MIT license text are in `THIRD_PARTY_NOTICES.txt`; `vite.config.js` bundles that notice and `LICENSE` into the extension. Verify the built `dist/` output after section 1 and each icon upgrade. UI attribution is optional.
 
-Suggested icon mapping: intercepted/active rule → bolt or shield-check; pending rule → clock or shield; blocked request → ban; diagnostic pass/fail → circle-check/circle-x; expand → chevron-down; close/delete → x/trash; format JSON → braces; restore → restore; import/export → upload/download; empty request detail → file-description. Keep the recording dot as a status indicator, not an icon.
+Icon mapping: intercepted/active rule → bolt; pending rule → clock; blocked request → ban; diagnostic pass/fail → circle-check/circle-x; expand → chevron-down; close/delete → x/trash; format JSON → braces; restore → restore; import/export → upload/download; empty request detail → file-description. Section 2 adds search, filter, and list-details icons to the toolbar. Keep the recording dot as a status indicator, not an icon.
 
 ## Reviewable work sections
 
@@ -49,6 +49,7 @@ Run `npm test` and `npm run build` after each section. Review the affected inter
 - The seven sections and their order are accepted as review stops.
 - The popup receives the same visual refresh in section 7.
 - Keyboard and accessibility fixes and narrow-width improvements are included in the relevant sections.
-- MPL 2.0 is the selected license for the open core. Section 1 adds locally bundled Tabler icons, shared UI components, visible focus styles, and accessible disclosure buttons. The production build includes `LICENSE` and `THIRD_PARTY_NOTICES.txt`. Keep all changes uncommitted for review.
+- MPL 2.0 is the selected license for the open core. Section 1 added locally bundled Tabler icons, shared UI components, visible focus styles, and accessible disclosure buttons. The production build includes `LICENSE` and `THIRD_PARTY_NOTICES.txt`; the user committed section 1.
+- Section 2 extracts `PanelToolbar`, `RecordingControl`, `RequestSearch`, `MethodFilter`, `TrafficFilterMenu`, `RulesToggle`, and `LanguageSelector`. The toolbar uses one row above 720 px, two rows down to 441 px, and three rows at 440 px and below. The traffic menu remains within a 320 px viewport, retains hidden counts and saved visibility choices, and closes with Escape. Section 2 changes remain uncommitted for review.
 
 No commits will be made; the user reviews and commits the changes.

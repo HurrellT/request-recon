@@ -3,24 +3,21 @@ import { createEffect, createMemo, createSignal, For, Match, onCleanup, onMount,
 import "../styles.css";
 import "../ui/ui.css";
 import "./panel.css";
+import "./toolbar/toolbar.css";
 import { Icon } from "../ui/Icon";
 import { IconButton } from "../ui/IconButton";
 import { MethodBadge, StatusBadge } from "../ui/Badges";
 import { EmptyState } from "../ui/EmptyState";
 import { CollapsibleSection } from "../ui/CollapsibleSection";
+import { PanelToolbar } from "./toolbar/PanelToolbar";
 import {
   activeTab,
   applyTrafficVisibility,
-  clearRequests,
   directEditRule,
-  filterText,
   findMatchingRuleForRequest,
   findRule,
-  hiddenCategoryCounts,
   hiddenRequestCount,
-  isRecording,
   matchingRequests,
-  methodFilter,
   requests,
   rules,
   selectedRequest,
@@ -28,21 +25,18 @@ import {
   setActiveTab,
   setAllTrafficVisible,
   setDirectEditRule,
-  setFilterText,
-  setMethodFilter,
   setSelectedId,
   setShowRulesSidebar,
   setRules,
   showRulesSidebar,
   showToast,
   toast,
-  trafficVisibility,
-  updateTrafficVisibility,
   visibleRequests,
 } from "./store";
 import { usePort } from "./usePort";
-import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
+import { initializeLanguage, language, t } from "../lib/i18n";
 import {
+  HTTP_METHODS,
   getBodySummary,
   getPath,
   getRequestLabel,
@@ -56,7 +50,6 @@ import {
   urlToPattern,
 } from "../lib/request-utils";
 
-const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 const ERROR_STATUSES = [
   [400, "400 Bad Request"],
   [401, "401 Unauthorized"],
@@ -91,80 +84,9 @@ function PanelApp() {
     }
   });
 
-  const activeRulesCount = createMemo(() => rules().filter((rule) => rule.enabled).length);
-
   return (
     <div id="app">
-      <div id="toolbar">
-        <button
-          id="record-btn"
-          classList={{ active: isRecording() }}
-          title={t("recordTitle")}
-          onClick={() => send({ type: isRecording() ? "STOP" : "START" })}
-        >
-          <span id="record-dot" />
-          <span id="record-label">{isRecording() ? t("stop") : t("start")}</span>
-        </button>
-        <button class="toolbar-btn" title={t("clearTitle")} onClick={clearRequests}>
-          {t("clear")}
-        </button>
-        <div class="separator" />
-        <input
-          type="text"
-          id="filter-input"
-          placeholder={t("searchPlaceholder")}
-          value={filterText()}
-          onInput={(event) => setFilterText(event.currentTarget.value)}
-        />
-        <select
-          id="method-filter"
-          title={t("methodFilterTitle")}
-          value={methodFilter()}
-          onChange={(event) => setMethodFilter(event.currentTarget.value)}
-        >
-          <option value="">{t("allMethods")}</option>
-          <For each={HTTP_METHODS}>{(method) => <option value={method}>{method}</option>}</For>
-        </select>
-        <details id="traffic-filter-menu">
-          <summary class="toolbar-btn" title={t("trafficTitle")}>
-            {t("traffic")} <Show when={hiddenRequestCount() > 0}><span class="traffic-hidden-count">{hiddenRequestCount()}</span></Show>
-          </summary>
-          <div id="traffic-filter-options">
-            <div class="traffic-filter-heading">{t("showInList")}</div>
-            <For each={[
-              ["preflight", "corsPreflights"],
-              ["assets", "staticResources"],
-              ["navigation", "ssrNavigation"],
-            ]}>
-              {([category, labelKey]) => (
-                <label class="traffic-filter-option">
-                  <input
-                    type="checkbox"
-                    checked={trafficVisibility()[category]}
-                    onChange={(event) => updateTrafficVisibility(category, event.currentTarget.checked)}
-                  />
-                  <span>{t(labelKey)}</span>
-                  <Show when={hiddenCategoryCounts()[category] > 0}>
-                    <span class="traffic-category-count">{hiddenCategoryCounts()[category]}</span>
-                  </Show>
-                </label>
-              )}
-            </For>
-            <div class="traffic-filter-actions">
-              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(true)}>{t("showAll")}</button>
-              <button class="toolbar-btn" onClick={() => setAllTrafficVisible(false)}>{t("hideNoise")}</button>
-            </div>
-          </div>
-        </details>
-        <div class="separator" />
-        <button class="toolbar-btn" id="rules-toggle-btn" title={t("savedRulesTitle")} onClick={() => setShowRulesSidebar((open) => !open)}>
-          {t("rules")} <Show when={activeRulesCount() > 0}><span id="rules-count">{activeRulesCount()}</span></Show>
-        </button>
-        <select id="language-selector" title={t("language")} aria-label={t("language")} value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
-          <option value="es">ES</option>
-          <option value="en">EN</option>
-        </select>
-      </div>
+      <PanelToolbar />
 
       <div id="main">
         <RequestList />

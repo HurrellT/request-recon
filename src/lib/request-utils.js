@@ -1,4 +1,5 @@
 export const MAX_REQUESTS = 1000;
+export const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 export function methodCSSClass(method) {
   const m = (method || "").toUpperCase();

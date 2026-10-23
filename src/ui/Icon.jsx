@@ -12,6 +12,9 @@ import upload from "../assets/icons/upload.svg?raw";
 import download from "../assets/icons/download.svg?raw";
 import fileDescription from "../assets/icons/file-description.svg?raw";
 import pencil from "../assets/icons/pencil.svg?raw";
+import search from "../assets/icons/search.svg?raw";
+import filter from "../assets/icons/filter.svg?raw";
+import listDetails from "../assets/icons/list-details.svg?raw";
 
 // These are fixed, locally bundled Tabler SVGs. Never add user-supplied markup here.
 const icons = {
@@ -29,6 +32,9 @@ const icons = {
   download,
   "file-description": fileDescription,
   pencil,
+  search,
+  filter,
+  "list-details": listDetails,
 };
 
 export function iconMarkup(name) {
