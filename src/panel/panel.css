@@ -44,113 +44,14 @@
 }
 
 .rule-url,
-.gql-op,
-.diag-value {
+.gql-op {
   font-family: var(--font-mono);
 }
 
-.rule-editor {
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.rule-banner {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 10px;
-  border-radius: var(--radius);
-  font-size: 11px;
-  border: 1px solid;
-}
-
-.rule-banner.intercepted { background: #141f16; border-color: var(--green); color: var(--green); }
-.rule-banner.pending { background: #1c1c10; border-color: var(--yellow); color: var(--yellow); }
-.rule-banner.new-rule { background: #101824; border-color: var(--blue); color: var(--blue); }
-
-.rule-diag {
-  background: #1a1a1a;
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius);
-  font-size: 11px;
-}
-
-.rule-diag summary {
-  padding: 6px 10px;
-  cursor: pointer;
-  color: var(--text-muted);
-  user-select: none;
-  list-style: none;
-}
-
-.diag-hint {
-  padding: 4px 10px 6px;
-  color: var(--text-dim);
-  font-size: 10px;
-}
-
-.diag-table {
-  width: 100%;
-  border-collapse: collapse;
-  padding: 0 6px 6px;
-}
-
-.diag-table td {
-  padding: 3px 6px;
-  vertical-align: top;
-}
-
-.diag-icon {
-  width: 20px;
-  text-align: center;
-}
-
-.diag-icon.pass { color: var(--green); }
-.diag-icon.fail { color: var(--red); }
-
-.diag-label {
-  color: var(--text-muted);
-  white-space: nowrap;
-  width: 110px;
-}
-
-.diag-value {
-  color: var(--text);
-  word-break: break-all;
-}
-
-.diag-actual {
-  color: var(--text-dim);
-  font-size: 10px;
-  display: block;
-}
-
-.form-row {
-  display: flex;
-  gap: 10px;
-}
-
-.form-row .form-group {
-  flex: 1;
-}
-
-.body-header,
-.rule-actions,
 .sidebar-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.rule-actions {
-  padding-top: 4px;
-}
-
-.btn-group {
-  display: flex;
-  gap: 6px;
 }
 
 #rules-sidebar {

@@ -41,7 +41,7 @@
   overflow-wrap: anywhere;
 }
 
-.modified-badge {
+.detail-rule-state {
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -52,7 +52,7 @@
   color: var(--orange);
 }
 
-.modified-badge.blocked {
+.detail-rule-state.blocked {
   background: var(--red-dim);
   color: var(--red);
 }

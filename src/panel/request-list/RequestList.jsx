@@ -1,12 +1,10 @@
 import { For, Show } from "solid-js";
 import { t } from "../../lib/i18n";
-import { requestRuleState } from "../../lib/request-utils";
 import {
-  findMatchingRuleForRequest,
-  findRule,
   hiddenRequestCount,
   matchingRequests,
   requests,
+  ruleStateForRequest,
   selectedRequest,
   setAllTrafficVisible,
   setDirectEditRule,
@@ -18,11 +16,6 @@ import {
 import { RequestListEmptyState } from "./RequestListEmptyState";
 import { RequestListHeader } from "./RequestListHeader";
 import { RequestRow } from "./RequestRow";
-
-function stateForRequest(req) {
-  const matchedRule = (req.ruleId ? findRule(req.ruleId) : null) ?? findMatchingRuleForRequest(req);
-  return requestRuleState(req, matchedRule);
-}
 
 export function RequestList() {
   const clearFilters = () => {
@@ -52,7 +45,7 @@ export function RequestList() {
                 <RequestRow
                   req={req}
                   selected={req.id === selectedRequest()?.id}
-                  ruleState={stateForRequest(req)}
+                  ruleState={ruleStateForRequest(req)}
                   onSelect={() => {
                     setSelectedId(req.id);
                     setDirectEditRule(null);

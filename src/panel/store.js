@@ -1,5 +1,5 @@
 import { createMemo, createSignal } from "solid-js";
-import { MAX_REQUESTS, getRequestLabel, ruleMatchesRequest } from "../lib/request-utils";
+import { MAX_REQUESTS, getRequestLabel, requestRuleState, ruleMatchesRequest } from "../lib/request-utils";
 import { DEFAULT_TRAFFIC_VISIBILITY, TRAFFIC_CATEGORIES, getTrafficCategory, isHiddenByTrafficFilter } from "../lib/traffic-filter";
 
 export const [requests, setRequests] = createSignal([]);
@@ -47,6 +47,12 @@ export function findRule(ruleId) {
 export function findMatchingRuleForRequest(req) {
   if (!req) return null;
   return rules().find((rule) => ruleMatchesRequest(rule, req)) ?? null;
+}
+
+export function ruleStateForRequest(req) {
+  if (!req) return null;
+  const matchedRule = (req.ruleId ? findRule(req.ruleId) : null) ?? findMatchingRuleForRequest(req);
+  return requestRuleState(req, matchedRule);
 }
 
 export function applyTrafficVisibility(value) {

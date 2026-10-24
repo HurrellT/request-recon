@@ -30,10 +30,14 @@ export function DetailHeader(props) {
         <Show when={props.request?.graphql?.operationName ?? props.rule?.operationName}>
           <span class="detail-graphql-op">{props.request?.graphql?.operationName ?? props.rule?.operationName}</span>
         </Show>
-        <Show when={props.request?.ruleApplied}>
-          <span class="modified-badge" classList={{ blocked: !!props.request?.appliedBlockRequest }}>
-            <Icon name={props.request?.appliedBlockRequest ? "ban" : "bolt"} size="sm" />
-            {t(props.request?.appliedBlockRequest ? "blockedShort" : "modified")}
+        <Show when={props.ruleState === "intercepted" || props.ruleState === "blocked"}>
+          <span
+            class="detail-rule-state"
+            classList={{ blocked: props.ruleState === "blocked" }}
+            title={t(props.ruleState === "blocked" ? "blockedRequest" : "interceptedTitle")}
+          >
+            <Icon name={props.ruleState === "blocked" ? "ban" : "bolt"} size="sm" />
+            {t(props.ruleState === "blocked" ? "blockedShort" : "interceptedShort")}
           </span>
         </Show>
       </div>

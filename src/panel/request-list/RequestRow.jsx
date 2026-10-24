@@ -18,7 +18,7 @@ export function RequestRow(props) {
       class="request-item"
       classList={{
         selected: props.selected,
-        modified: props.ruleState === "intercepted",
+        intercepted: props.ruleState === "intercepted",
         blocked: props.ruleState === "blocked",
         "has-active-rule": props.ruleState === "pending",
       }}

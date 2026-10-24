@@ -68,7 +68,7 @@
   padding-left: 6px;
 }
 
-.request-item.modified {
+.request-item.intercepted {
   border-left: 2px solid var(--orange);
   padding-left: 6px;
 }
