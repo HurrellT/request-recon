@@ -169,20 +169,12 @@
 #no-selection .ui-icon { opacity: 0.3; }
 
 @media (max-width: 680px) {
-  #main { position: relative; flex-direction: column; }
+  #main { flex-direction: column; }
   #request-list-panel {
     width: 100%;
     height: min(180px, 35vh);
     border-right: 0;
     border-bottom: 1px solid var(--border);
-  }
-  #rules-sidebar {
-    position: absolute;
-    top: 0;
-    right: 0;
-    height: 100%;
-    max-width: 100%;
-    z-index: 2;
   }
 }
 

@@ -7,134 +7,14 @@
 #main {
   display: flex;
   flex: 1;
+  min-height: 0;
+  position: relative;
   overflow: hidden;
 }
 
 .btn-icon:hover,
-.section-header:hover,
-.rule-item:hover {
+.section-header:hover {
   background: var(--bg-hover);
-}
-
-#rules-list {
-  flex: 1;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.rule-meta {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.graphql-op,
-.gql-op {
-  color: var(--purple);
-}
-
-.graphql-op {
-  font-size: 10px;
-  font-family: var(--font-mono);
-  flex-shrink: 0;
-  max-width: 90px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.rule-url,
-.gql-op {
-  font-family: var(--font-mono);
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-#rules-sidebar {
-  width: 0;
-  overflow: hidden;
-  flex-shrink: 0;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  transition: width 0.22s ease;
-}
-
-#rules-sidebar.open {
-  width: 320px;
-}
-
-.sidebar-header {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-bright);
-  flex-shrink: 0;
-}
-
-.sidebar-actions {
-  display: flex;
-  gap: 4px;
-}
-
-.rule-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--border);
-  cursor: pointer;
-}
-
-.rule-item.disabled {
-  opacity: 0.5;
-}
-
-.rule-item:hover .rule-edit-hint {
-  opacity: 1;
-}
-
-.rule-edit-hint {
-  font-size: 10px;
-  color: var(--text-dim);
-  opacity: 0;
-  transition: opacity 0.15s;
-  flex-shrink: 0;
-}
-
-.rule-item-info {
-  flex: 1;
-  overflow: hidden;
-}
-
-.rule-name {
-  font-size: 11px;
-  color: var(--text);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: block;
-}
-
-.rule-block-icon { color: var(--red); vertical-align: middle; }
-
-.rule-meta {
-  gap: 4px;
-  margin-top: 3px;
-}
-
-.rule-url {
-  font-size: 10px;
-  color: var(--text-dim);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 #toast {
