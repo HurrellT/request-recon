@@ -65,7 +65,7 @@
 
 .rule-item:hover { background: var(--bg-hover); }
 .rule-item.selected { background: var(--bg-selected); }
-.rule-item.disabled .rule-edit-btn { opacity: 0.55; }
+.rule-item.disabled .rule-summary-name { color: var(--text-secondary); }
 
 .rule-edit-btn {
   display: flex;
@@ -82,33 +82,7 @@
 }
 
 .rule-edit-btn:focus-visible { outline-offset: 0; }
-.rule-item-info { display: flex; flex: 1; flex-direction: column; gap: 3px; min-width: 0; }
-.rule-name {
-  display: block;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  color: var(--text);
-  font-size: 11px;
-}
-
-.rule-block-icon { color: var(--red); vertical-align: middle; }
-.rule-meta { display: flex; align-items: center; gap: 4px; min-width: 0; }
-.graphql-op { color: var(--purple); }
-.graphql-op,
-.rule-url { font-family: var(--font-mono); }
-
-.graphql-op,
-.rule-url {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 10px;
-}
-
-.graphql-op { max-width: 90px; }
-.rule-url { color: var(--text-dim); }
+.rule-edit-btn .rule-summary { flex: 1; }
 .rule-edit-icon { color: var(--text-muted); opacity: 0.55; }
 .rule-edit-btn:hover .rule-edit-icon,
 .rule-edit-btn:focus-visible .rule-edit-icon { opacity: 1; color: var(--text); }

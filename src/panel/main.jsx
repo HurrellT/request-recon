@@ -13,6 +13,7 @@ import { RequestList } from "./request-list/RequestList";
 import { RequestDetail } from "./detail/RequestDetail";
 import { RuleEditor } from "./rule-editor/RuleEditor";
 import { RulesSidebar } from "./rules-sidebar/RulesSidebar";
+import { Toast } from "../ui/Toast";
 import {
   applyTrafficVisibility,
   setRules,
@@ -53,9 +54,7 @@ function PanelApp() {
         <RulesSidebar />
       </div>
 
-      <div id="toast" classList={{ show: !!toast(), success: toast()?.type === "success", error: toast()?.type === "error" }}>
-        {toast()?.message}
-      </div>
+      <Toast toast={toast()} />
     </div>
   );
 }

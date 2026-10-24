@@ -1,27 +1,43 @@
 import { render } from "solid-js/web";
-import { createEffect, createMemo, createSignal, For, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import "../styles.css";
 import "../ui/ui.css";
 import "./popup.css";
-import { shortPattern } from "../lib/request-utils";
-import { chooseLanguage, initializeLanguage, language, t } from "../lib/i18n";
-import { MethodBadge } from "../ui/Badges";
-import { EmptyState } from "../ui/EmptyState";
-import { Button, FieldLabel, Select, ToggleSwitch } from "../ui/Controls";
+import { initializeLanguage, language, t } from "../lib/i18n";
+import { Toast } from "../ui/Toast";
+import { PopupFooter } from "./PopupFooter";
+import { PopupHeader } from "./PopupHeader";
+import { PopupRuleList } from "./PopupRuleList";
 
 function PopupApp() {
   const [rules, setRules] = createSignal([]);
+  const [notice, setNotice] = createSignal(null);
+  let noticeTimer;
   const activeCount = createMemo(() => rules().filter((rule) => rule.enabled).length);
   const anyActive = createMemo(() => rules().some((rule) => rule.enabled));
 
+  const showSaveError = () => {
+    setNotice({ message: t("rulesSaveFailed"), type: "error" });
+    clearTimeout(noticeTimer);
+    noticeTimer = setTimeout(() => setNotice(null), 3000);
+  };
+
   const loadRules = async () => {
-    const { rules: stored = [] } = await chrome.storage.local.get("rules");
-    setRules(stored);
+    try {
+      const { rules: stored = [] } = await chrome.storage.local.get("rules");
+      setRules(stored);
+    } catch (_) {
+      showSaveError();
+    }
   };
 
   const saveRules = async (updated) => {
-    await chrome.storage.local.set({ rules: updated });
-    setRules(updated);
+    try {
+      await chrome.storage.local.set({ rules: updated });
+      setRules(updated);
+    } catch (_) {
+      showSaveError();
+    }
   };
 
   const toggleRule = async (ruleId, enabled) => {
@@ -52,68 +68,15 @@ function PopupApp() {
 
   onCleanup(() => {
     chrome.storage.onChanged.removeListener(onStorageChanged);
+    clearTimeout(noticeTimer);
   });
 
   return (
     <div class="popup-shell">
-      <header class="popup-header">
-        <div class="logo">RR</div>
-        <span class="header-title">Request Recon</span>
-        <Show when={activeCount() > 0}>
-          <span class="active-badge">{t("activeRules", { count: activeCount() })}</span>
-        </Show>
-      </header>
-
-      <div id="rules-section">
-        <div class="section-label">{t("rules")}</div>
-        <div id="popup-rules-list">
-          <Show
-            when={rules().length > 0}
-            fallback={
-              <EmptyState title={t("noRules")}>{t("noRulesPopup")}</EmptyState>
-            }
-          >
-            <For each={rules()}>
-              {(rule) => (
-                <div class="rule-row" classList={{ disabled: !rule.enabled }}>
-                  <ToggleSwitch
-                    label={`${rule.enabled ? t("disable") : t("enable")}: ${rule.name || rule.urlPattern || t("unnamed")}`}
-                    checked={!!rule.enabled}
-                    onChange={(checked) => toggleRule(rule.id, checked)}
-                  />
-                  <div class="rule-info">
-                    <div class="rule-name" title={rule.name || rule.urlPattern || ""}>
-                      {rule.name || rule.urlPattern || t("unnamed")}
-                    </div>
-                    <div class="rule-meta">
-                      <Show when={rule.method && rule.method !== "*"}>
-                        <MethodBadge method={rule.method} />
-                      </Show>
-                      <Show when={rule.operationName} fallback={<span class="rule-url" title={rule.urlPattern}>{shortPattern(rule.urlPattern)}</span>}>
-                        <span class="gql-op" title={rule.operationName}>{rule.operationName}</span>
-                      </Show>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </For>
-          </Show>
-        </div>
-      </div>
-
-      <footer class="popup-footer">
-        <span class="footer-hint">{t("popupFooter")}</span>
-        <Show when={rules().length > 0}>
-          <Button class="btn-all" onClick={toggleAll}>{anyActive() ? t("disableAll") : t("enableAll")}</Button>
-        </Show>
-      </footer>
-      <div class="popup-language">
-        <FieldLabel for="popup-language">{t("language")}</FieldLabel>
-        <Select id="popup-language" value={language()} onChange={(event) => chooseLanguage(event.currentTarget.value)}>
-          <option value="es">Español</option>
-          <option value="en">English</option>
-        </Select>
-      </div>
+      <PopupHeader activeCount={activeCount()} />
+      <PopupRuleList rules={rules()} onToggle={toggleRule} />
+      <PopupFooter hasRules={rules().length > 0} anyActive={anyActive()} onToggleAll={toggleAll} />
+      <Toast toast={notice()} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { splitProps } from "solid-js";
+import { createEffect, splitProps } from "solid-js";
 
 const controlClass = (variant, className, kind) => [variant === "form" && `form-${kind}`, className].filter(Boolean).join(" ");
 
@@ -8,8 +8,12 @@ export function Input(props) {
 }
 
 export function Select(props) {
-  const [local, native] = splitProps(props, ["variant", "class", "children"]);
-  return <select {...native} class={controlClass(local.variant, local.class, "select")}>{local.children}</select>;
+  const [local, native] = splitProps(props, ["variant", "class", "children", "value"]);
+  let element;
+  createEffect(() => {
+    if (element && local.value != null) element.value = String(local.value);
+  });
+  return <select {...native} ref={element} class={controlClass(local.variant, local.class, "select")}>{local.children}</select>;
 }
 
 export function TextArea(props) {
