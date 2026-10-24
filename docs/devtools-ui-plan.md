@@ -1,6 +1,6 @@
 # DevTools UI review and component plan
 
-Status: **sections 1–6 committed by the user; section 7 implemented and awaiting review**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
+Status: **sections 1–7 committed by the user; post-commit integration check recorded below**. MPL 2.0 covers the core; Tabler Icons are the UI icon family. Branch: `codex/devtools-ui-components`.
 
 ## Current shape
 
@@ -56,6 +56,13 @@ Run `npm test` and `npm run build` after each section. Review the affected inter
 - Shared control follow-up for section 4: `Button`, `Input`, `Select`, `TextArea`, `FieldLabel`, `FormField`, `CheckboxField`, and `ToggleSwitch` now live in `src/ui/controls` and are used across the toolbar, request list, detail tabs, rule editor, sidebar, and popup. The rule editor's labels and hints are associated with their fields, and the panel and popup share button, form, and toggle styles. The user committed this follow-up with section 4.
 - Section 5 extracts `RuleEditor`, `RuleMatchFields`, `ErrorSimulationFields`, `ResponseBodyEditor`, `RuleActions`, `RuleContextBanner`, and `RuleDiagnostics`, with draft initialization and diagnostics in helpers. A draft stays mounted across request/response tab changes and does not reset when the selected request's rule updates while the user is editing. Rule editor styles are grouped with the section. The request list and detail header now use the same rule-state calculation and both say “Intercepted” for applied non-blocking rules. The user committed section 5.
 - Section 6 extracts `RulesSidebar`, `SidebarHeader`, `RuleList`, `RuleListItem`, and `RuleImportExportActions`. Each row has separate edit, toggle, and delete controls; deleting a focused row moves focus to a nearby rule or the close button. The closed sidebar is removed from keyboard navigation. The sidebar remains inline when space permits and becomes a focus-contained dialog below 981 px. Import validates the file shape before sending rules, and Escape closes the sidebar. The user committed section 6.
-- Section 7 refreshes and extracts the popup into `PopupHeader`, `PopupRuleList`, `PopupRuleItem`, and `PopupFooter`. The popup and sidebar use a shared `RuleSummary`, and both surfaces use the same `Toast` component with live announcements. The shared `Select` now applies its value after options mount, fixing a mismatch between the visible language and the selected option. The popup has an error message when rule storage fails. A local browser preview verified the popup's empty and populated structure, the panel at wide and 320 px widths, and no horizontal overflow at 320 px. Section 7 remains uncommitted for review.
+- Section 7 refreshes and extracts the popup into `PopupHeader`, `PopupRuleList`, `PopupRuleItem`, and `PopupFooter`. The popup and sidebar use a shared `RuleSummary`, and both surfaces use the same `Toast` component with live announcements. The shared `Select` now applies its value after options mount, fixing a mismatch between the visible language and the selected option. The popup has an error message when rule storage fails. A local browser preview verified the popup's empty and populated structure, the panel at wide and 320 px widths, and no horizontal overflow at 320 px. The user committed section 7.
+
+## Post-commit integration check
+
+- Confirmed Chrome's unpacked Request Recon installation loads from this repository's `dist/` directory. Reloaded the extension after the section 7 build and reopened its DevTools panel.
+- Started capture on a GraphQL test page, reloaded the page, and verified captured requests, the visible/total count, hidden-traffic count, request selection, response headers and body, and the rule editor in the installed extension.
+- Created a temporary rule with a URL pattern that cannot match the test page. Verified the sidebar count and row, disabled the rule, then deleted it. Saved rules returned to zero. The sidebar closed with Escape and was reopened for the user's original view.
+- The section 7 local browser preview already covered popup empty and populated states, individual and bulk toggles, English and Spanish, and the shared language selector. This post-commit check did not recheck the installed popup because the browser control rejected direct access to an extension URL.
 
 No commits will be made; the user reviews and commits the changes.
