@@ -162,10 +162,16 @@ function injectPageToast(reqData, rule) {
         toast.style.animation = '__rr_out 0.22s ease forwards';
         setTimeout(function() { toast.remove(); }, 220);
       }, 3200);
+
+      return true;
     })(${payload});
   `;
 
   chrome.devtools.inspectedWindow.eval(script, (_result, err) => {
-    if (err) console.warn("[RR] page toast error:", err.description);
+    // The inspected page can navigate before this optional toast is injected.
+    // Chrome reports that as an Inspector protocol error; the rule was already applied.
+    if (err && err.code !== "E_PROTOCOLERROR") {
+      console.warn("[RR] page toast error:", err.description, err.details || err.value);
+    }
   });
 }
