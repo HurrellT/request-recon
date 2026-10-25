@@ -1,8 +1,9 @@
 import { Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { prettyJSON, tryFormatJSON } from "../../lib/request-utils";
-import { FormField, TextArea } from "../../ui/Controls";
+import { FormField } from "../../ui/Controls";
 import { IconButton } from "../../ui/IconButton";
+import { JsonCodeEditor } from "../../ui/JsonCodeEditor";
 import { showToast } from "../store";
 
 export function ResponseBodyEditor(props) {
@@ -27,7 +28,15 @@ export function ResponseBodyEditor(props) {
           </div>
         }
       >
-        {({ id }) => <TextArea id={id} variant="form" rows="12" spellcheck={false} value={props.draft.responseBody} onInput={(event) => props.update("responseBody", event.currentTarget.value)} />}
+        {({ id, labelId, describedBy }) => (
+          <JsonCodeEditor
+            id={id}
+            labelId={labelId}
+            describedBy={describedBy}
+            value={props.draft.responseBody}
+            onChange={(value) => props.update("responseBody", value)}
+          />
+        )}
       </FormField>
     </Show>
   );

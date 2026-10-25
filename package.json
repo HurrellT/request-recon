@@ -11,6 +11,11 @@
     "test": "node --test"
   },
   "dependencies": {
+    "@codemirror/lang-json": "^6.0.2",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/lint": "^6.9.7",
+    "@lezer/highlight": "^1.2.5",
+    "codemirror": "^6.0.2",
     "solid-js": "^1.9.14"
   },
   "devDependencies": {
