@@ -3,7 +3,7 @@ import { Icon } from "./Icon";
 import { Button } from "./Controls";
 
 export function CollapsibleSection(props) {
-  const [collapsed, setCollapsed] = createSignal(false);
+  const [collapsed, setCollapsed] = createSignal(props.defaultCollapsed ?? false);
   const bodyId = createUniqueId();
 
   return (

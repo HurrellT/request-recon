@@ -1,5 +1,6 @@
 import { createEffect, onCleanup, onMount } from "solid-js";
 import { EditorView, basicSetup } from "codemirror";
+import { EditorState } from "@codemirror/state";
 import { indentUnit, HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { json, jsonParseLinter } from "@codemirror/lang-json";
 import { linter, lintGutter } from "@codemirror/lint";
@@ -46,6 +47,8 @@ export function JsonCodeEditor(props) {
         basicSetup,
         json(),
         indentUnit.of("  "),
+        EditorState.readOnly.of(!!props.readOnly),
+        EditorView.editable.of(!props.readOnly),
         EditorView.lineWrapping,
         syntaxHighlighting(jsonHighlightStyle),
         linter(lintJSONBody),
@@ -54,11 +57,13 @@ export function JsonCodeEditor(props) {
         EditorView.contentAttributes.of({
           id: props.id,
           "aria-labelledby": props.labelId,
+          "aria-label": props.ariaLabel,
           "aria-describedby": props.describedBy,
+          tabindex: props.readOnly ? "0" : undefined,
           spellcheck: "false",
         }),
         EditorView.updateListener.of((update) => {
-          if (update.docChanged && !syncingFromProps) props.onChange(update.state.doc.toString());
+          if (update.docChanged && !syncingFromProps) props.onChange?.(update.state.doc.toString());
         }),
       ],
     });
