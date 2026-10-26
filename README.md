@@ -33,7 +33,7 @@ Response headers/status and network failures are captured without waiting for re
 
 Request-body previews and body-filter matching use the first 64 KiB. GraphQL operation matching requires a complete JSON body within that limit. URLs longer than 16 KiB are not matched.
 
-Rules apply at the response stage. An explicit replacement body is sent immediately, so the original upstream body is unavailable for that request. Uncheck **Replace response body** to preserve the original bytes when changing only status or headers. Formatting JSON is an explicit editor action; saving preserves body text as entered.
+Rules apply at the response stage. An explicit replacement body is sent immediately, so the original upstream body is unavailable for that request. Uncheck **Replace response body** to preserve the original bytes when changing only status or headers. JSON response bodies are formatted when opening a rule or restoring a captured response. Further edits are saved as entered; use **Format JSON** to format them again. Press **Cmd+S / Ctrl+S** while the Rule tab is active to save or update the rule.
 
 **Simulate response error** changes the client-visible result. The outbound request has already reached the server and can cause side effects; this feature does not prevent a POST or GraphQL mutation from running.
 

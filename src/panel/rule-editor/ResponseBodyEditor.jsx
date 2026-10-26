@@ -1,6 +1,6 @@
 import { Show } from "solid-js";
 import { t } from "../../lib/i18n";
-import { tryFormatJSON } from "../../lib/request-utils";
+import { prettyJSON, tryFormatJSON } from "../../lib/request-utils";
 import { CheckboxField, FormField } from "../../ui/Controls";
 import { lazy } from "solid-js";
 import { IconButton } from "../../ui/IconButton";
@@ -24,7 +24,7 @@ export function ResponseBodyEditor(props) {
           <div class="body-editor-actions">
             <IconButton icon="braces" label={t("formatJSON")} onClick={format} />
             <Show when={props.request?.resBody}>
-              <IconButton icon="restore" label={t("restoreResponse")} onClick={() => props.update("responseBody", props.request?.resBody ?? "")}>
+              <IconButton icon="restore" label={t("restoreResponse")} onClick={() => props.update("responseBody", prettyJSON(props.request?.resBody ?? ""))}>
                 {t("reset")}
               </IconButton>
             </Show>

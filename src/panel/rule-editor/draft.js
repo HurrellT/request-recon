@@ -1,4 +1,4 @@
-import { getPath, suggestBodyFilter, urlToPattern } from "../../lib/request-utils.js";
+import { getPath, prettyJSON, suggestBodyFilter, urlToPattern } from "../../lib/request-utils.js";
 import { validateRule } from "../../lib/rules.js";
 
 export function initialRuleDraft(rule, request) {
@@ -10,7 +10,7 @@ export function initialRuleDraft(rule, request) {
     operationName: rule ? rule.operationName ?? "" : request?.graphql?.operationName ?? "",
     bodyContains: rule ? rule.bodyContains ?? "" : suggestBodyFilter(request),
     statusCode: rule ? rule.statusCode ?? "" : request?.resStatus ?? 200,
-    responseBody: rule?.resBody ?? (rule ? "" : request?.resBody ?? ""),
+    responseBody: prettyJSON(rule?.resBody ?? (rule ? "" : request?.resBody ?? "")),
     overrideBody: rule ? rule.resBody != null : !!request && !request.bodyUnavailable,
     resHeaders: rule?.resHeaders ?? null,
     enabled: rule?.enabled ?? true,

@@ -1,4 +1,4 @@
-import { createMemo, createSignal, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { findMatchingRuleForRequest, findRule, requests, send, setDirectEditRule, showToast } from "../store";
 import { buildRuleDiagnostics } from "./diagnostics";
@@ -39,6 +39,18 @@ export function RuleEditor(props) {
     } catch (_) { /* messaging reports the error */ }
     finally { setBusy(false); }
   };
+
+  createEffect(() => {
+    if (props.active === false) return;
+    const onKeyDown = (event) => {
+      if (!(event.metaKey || event.ctrlKey) || event.altKey || event.shiftKey || event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      if (!event.repeat) void save();
+    };
+    // Capture before the code editor handles keyboard events.
+    document.addEventListener("keydown", onKeyDown, true);
+    onCleanup(() => document.removeEventListener("keydown", onKeyDown, true));
+  });
 
   const deleteRule = async () => {
     if (!ruleId() || busy()) return;

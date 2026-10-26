@@ -18,13 +18,33 @@ test("rule drafts prefer saved values and use the captured request as a fallback
   assert.equal(fromRequest.name, "/api/users");
   assert.equal(fromRequest.method, "POST");
   assert.equal(fromRequest.bodyContains, '"userId":42');
-  assert.equal(fromRequest.responseBody, '{"ok":true}');
+  assert.equal(fromRequest.responseBody, '{\n  "ok": true\n}');
 
   const fromRule = initialRuleDraft({ name: "Saved", bodyContains: "", resBody: "", blockRequest: true }, request);
   assert.equal(fromRule.name, "Saved");
   assert.equal(fromRule.bodyContains, "");
   assert.equal(fromRule.responseBody, "");
   assert.equal(fromRule.blockRequest, true);
+});
+
+test("rule drafts format saved JSON response bodies, including nested objects and arrays", () => {
+  const body = '{"users":[{"id":42,"active":true}],"next":null}';
+  const draft = initialRuleDraft({ resBody: body }, request);
+  assert.equal(draft.responseBody, JSON.stringify(JSON.parse(body), null, 2));
+  assert.deepEqual(JSON.parse(draft.responseBody), JSON.parse(body));
+});
+
+test("rule drafts preserve plain text, invalid JSON and empty response bodies", () => {
+  for (const body of ["  plain text\n", '{"unfinished":', ""]) {
+    assert.equal(initialRuleDraft({ resBody: body }, request).responseBody, body);
+    assert.equal(initialRuleDraft(null, { ...request, resBody: body }).responseBody, body);
+  }
+});
+
+test("saving preserves response body edits as entered", () => {
+  const body = '{"edited":true}';
+  const draft = { ...initialRuleDraft(null, request), responseBody: body };
+  assert.equal(ruleFromDraft(draft, "rule-1", request).resBody, body);
 });
 
 test("saving a draft keeps HTTP and network error modes distinct", () => {
