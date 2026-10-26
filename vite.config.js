@@ -2,7 +2,7 @@ import { defineConfig } from "vite";
 import { readFileSync } from "node:fs";
 import solid from "vite-plugin-solid";
 import { crx } from "@crxjs/vite-plugin";
-import manifest from "./manifest.json";
+import manifest from "./manifest.json" with { type: "json" };
 
 function bundleLicenseNotices() {
   return {

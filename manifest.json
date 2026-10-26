@@ -5,6 +5,12 @@
   "minimum_chrome_version": "118",
   "default_locale": "es",
   "description": "__MSG_extensionDescription__",
+  "icons": {
+    "16": "assets/request-recon-logo-sm.png",
+    "32": "assets/request-recon-logo-sm.png",
+    "48": "assets/request-recon-logo-sm.png",
+    "128": "assets/request-recon-logo.png"
+  },
   "permissions": [
     "debugger",
     "storage"
@@ -15,6 +21,10 @@
   },
   "devtools_page": "devtools/devtools.html",
   "action": {
+    "default_icon": {
+      "16": "assets/request-recon-logo-sm.png",
+      "32": "assets/request-recon-logo-sm.png"
+    },
     "default_popup": "popup/index.html",
     "default_title": "Request Recon"
   }
