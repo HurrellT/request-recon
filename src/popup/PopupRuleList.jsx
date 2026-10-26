@@ -22,7 +22,7 @@ export function PopupRuleList(props) {
       >
         <ul class="popup-rules-list">
           <For each={props.rules}>
-            {(rule) => <PopupRuleItem rule={rule} onToggle={props.onToggle} />}
+            {(rule) => <PopupRuleItem rule={rule} onToggle={props.onToggle} busy={props.busy} />}
           </For>
         </ul>
       </Show>

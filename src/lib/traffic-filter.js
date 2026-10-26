@@ -55,10 +55,10 @@ export function getTrafficCategory(req) {
 }
 
 export function isAlwaysVisible(req) {
-  return req.resStatus >= 400 || req.ruleApplied === true || !!req.ruleId;
+  return req.resStatus >= 400 || !!req.responseErrorReason || req.networkFailureApplied || req.ruleApplied === true || !!req.ruleId;
 }
 
 export function isHiddenByTrafficFilter(req, visibility) {
-  const category = getTrafficCategory(req);
+  const category = req.trafficCategory ?? getTrafficCategory(req);
   return !!category && !visibility[category] && !isAlwaysVisible(req);
 }

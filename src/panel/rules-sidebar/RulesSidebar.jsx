@@ -3,6 +3,7 @@ import { t } from "../../lib/i18n";
 import { ruleMatchesRequest } from "../../lib/request-utils";
 import {
   directEditRule,
+  currentDirectRule,
   requests,
   rules,
   selectedRequest,
@@ -16,6 +17,7 @@ import {
 } from "../store";
 import { parseRulesFile } from "./import-rules";
 import { RuleList } from "./RuleList";
+import { MAX_RULE_FILE_BYTES } from "../../lib/limits";
 import { SidebarHeader } from "./SidebarHeader";
 
 const overlayWidth = "(max-width: 980px)";
@@ -49,37 +51,36 @@ export function RulesSidebar() {
 
   const edit = (rule) => {
     const matchingRequest = [...requests()].reverse().find((request) => ruleMatchesRequest(rule, request));
-    if (matchingRequest) {
-      setDirectEditRule(null);
-      setSelectedId(matchingRequest.id);
-    } else {
-      setDirectEditRule(rule);
-      setSelectedId(null);
-    }
+    setDirectEditRule({ id: rule.id });
+    setSelectedId(matchingRequest?.id ?? null);
     setActiveTab("rule");
     if (overlay()) close(false);
     queueMicrotask(() => document.getElementById("detail-tab-rule")?.focus());
   };
 
-  const toggle = (rule, enabled) => send({ type: "TOGGLE_RULE", ruleId: rule.id, enabled });
+  const toggle = (rule, enabled) => send({ type: "TOGGLE_RULE", ruleId: rule.id, enabled }).catch(() => {});
 
-  const remove = (rule, event) => {
+  const remove = async (rule, event) => {
     const row = event.currentTarget.closest(".rule-item");
     const nextFocus = row?.nextElementSibling?.querySelector(".rule-edit-btn")
       ?? row?.previousElementSibling?.querySelector(".rule-edit-btn")
       ?? document.querySelector("#rules-sidebar .sidebar-close-btn");
     nextFocus?.focus();
-    send({ type: "DELETE_RULE", ruleId: rule.id });
-    if (directEditRule()?.id === rule.id) setDirectEditRule(null);
-    showToast(t("ruleDeleted"), "success");
+    try {
+      await send({ type: "DELETE_RULE", ruleId: rule.id });
+      if (directEditRule()?.id === rule.id) setDirectEditRule(null);
+      showToast(t("ruleDeleted"), "success");
+    } catch (_) { /* messaging reports the error */ }
   };
 
   const importFile = async (file) => {
     try {
+      if (file.size > MAX_RULE_FILE_BYTES) throw new Error("File too large");
       const imported = parseRulesFile(await file.text());
-      send({ type: "IMPORT_RULES", rules: imported });
+      await send({ type: "IMPORT_RULES", rules: imported });
       showToast(t("importedRules", { count: imported.length }), "success");
-    } catch (_) {
+    } catch (error) {
+      if (error.reply) return; // the command client already reports storage errors
       showToast(t("invalidRulesImport"), "error");
     }
   };
@@ -117,8 +118,8 @@ export function RulesSidebar() {
         inert={!showRulesSidebar()}
         onKeyDown={handleKeyDown}
       >
-        <SidebarHeader count={rules().length} onExport={() => send({ type: "EXPORT_RULES" })} onImport={importFile} onClose={() => close()} />
-        <RuleList rules={rules()} selectedRuleId={directEditRule()?.id ?? selectedRequest()?.ruleId} onEdit={edit} onToggle={toggle} onDelete={remove} />
+        <SidebarHeader count={rules().length} onExport={() => send({ type: "EXPORT_RULES" }).catch(() => {})} onImport={importFile} onClose={() => close()} />
+        <RuleList rules={rules()} selectedRuleId={currentDirectRule()?.id ?? selectedRequest()?.ruleId} onEdit={edit} onToggle={toggle} onDelete={remove} />
       </aside>
     </>
   );

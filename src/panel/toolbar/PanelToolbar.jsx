@@ -32,7 +32,7 @@ export function PanelToolbar() {
   return (
     <header id="toolbar">
       <div class="toolbar-capture">
-        <RecordingControl recording={isRecording()} onToggle={() => send({ type: isRecording() ? "STOP" : "START" })} />
+        <RecordingControl recording={isRecording()} onToggle={() => send({ type: isRecording() ? "STOP" : "START" }).catch(() => {})} />
         <Button class="toolbar-btn" title={t("clearTitle")} onClick={clearRequests}>
           <Icon name="trash" />
           <span>{t("clear")}</span>

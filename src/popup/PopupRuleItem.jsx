@@ -10,6 +10,7 @@ export function PopupRuleItem(props) {
       <ToggleSwitch
         label={`${props.rule.enabled ? t("disable") : t("enable")}: ${name()}`}
         checked={!!props.rule.enabled}
+        disabled={props.busy}
         onChange={(checked) => props.onToggle(props.rule.id, checked)}
       />
       <RuleSummary rule={props.rule} />

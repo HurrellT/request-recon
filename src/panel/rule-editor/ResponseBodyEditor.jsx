@@ -1,9 +1,10 @@
 import { Show } from "solid-js";
 import { t } from "../../lib/i18n";
-import { prettyJSON, tryFormatJSON } from "../../lib/request-utils";
-import { FormField } from "../../ui/Controls";
+import { tryFormatJSON } from "../../lib/request-utils";
+import { CheckboxField, FormField } from "../../ui/Controls";
+import { lazy } from "solid-js";
 import { IconButton } from "../../ui/IconButton";
-import { JsonCodeEditor } from "../../ui/JsonCodeEditor";
+const JsonCodeEditor = lazy(() => import("../../ui/JsonCodeEditor").then((module) => ({ default: module.JsonCodeEditor })));
 import { showToast } from "../store";
 
 export function ResponseBodyEditor(props) {
@@ -15,13 +16,15 @@ export function ResponseBodyEditor(props) {
 
   return (
     <Show when={!(props.draft.blockRequest && props.draft.blockType === "network-fail")}>
+      <CheckboxField label={t("replaceResponseBody")} hint={t("preserveResponseBodyHint")} checked={props.draft.overrideBody} onChange={(value) => props.update("overrideBody", value)} />
+      <Show when={props.draft.overrideBody}>
       <FormField
         label={t("responseBody")}
         actions={
           <div class="body-editor-actions">
             <IconButton icon="braces" label={t("formatJSON")} onClick={format} />
             <Show when={props.request?.resBody}>
-              <IconButton icon="restore" label={t("restoreResponse")} onClick={() => props.update("responseBody", prettyJSON(props.request?.resBody ?? ""))}>
+              <IconButton icon="restore" label={t("restoreResponse")} onClick={() => props.update("responseBody", props.request?.resBody ?? "")}>
                 {t("reset")}
               </IconButton>
             </Show>
@@ -38,6 +41,7 @@ export function ResponseBodyEditor(props) {
           />
         )}
       </FormField>
+      </Show>
     </Show>
   );
 }

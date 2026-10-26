@@ -1,15 +1,10 @@
-import { ruleMatchesRequest } from "../../lib/request-utils.js";
+import { ruleMatchesRequest, ruleMatchesURL } from "../../lib/rule-matcher.js";
 
 export function buildRuleDiagnostics(rule, capturedRequests, translate) {
   if (!rule || capturedRequests.length === 0) return null;
   const matchCount = capturedRequests.filter((request) => ruleMatchesRequest(rule, request)).length;
   const candidate = [...capturedRequests].reverse().find((request) => {
-    if (!request.url || !rule.urlPattern) return false;
-    try {
-      return new RegExp(rule.urlPattern, "i").test(request.url);
-    } catch (_) {
-      return false;
-    }
+    return ruleMatchesURL(rule, request.url);
   });
 
   if (matchCount > 0) {
@@ -23,14 +18,9 @@ export function buildRuleDiagnostics(rule, capturedRequests, translate) {
 
   const rows = [];
   const urlOk = (() => {
-    if (!rule.urlPattern) return true;
-    try {
-      return new RegExp(rule.urlPattern, "i").test(candidate?.url ?? "");
-    } catch (_) {
-      return false;
-    }
+    return ruleMatchesURL(rule, candidate?.url ?? "");
   })();
-  rows.push({ ok: urlOk, label: translate("urlPattern"), value: rule.urlPattern || translate("any") });
+  rows.push({ ok: urlOk, label: translate("urlPattern"), value: rule.urlPattern || rule.url || translate("any") });
 
   const methodOk = !rule.method || rule.method === "*" || (candidate && rule.method.toUpperCase() === candidate.method.toUpperCase());
   rows.push({ ok: methodOk, label: translate("method"), value: rule.method || "*", actual: candidate ? translate("requestMethodActual", { method: candidate.method }) : "" });

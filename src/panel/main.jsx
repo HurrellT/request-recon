@@ -18,9 +18,12 @@ import {
   applyTrafficVisibility,
   setRules,
   toast,
+  showToast,
+  send,
 } from "./store";
 import { usePort } from "./usePort";
-import { initializeLanguage, language } from "../lib/i18n";
+import { initializeLanguage, language, t } from "../lib/i18n";
+import { validateRules } from "../lib/rules";
 
 function PanelApp() {
   const tabId = chrome.devtools.inspectedWindow.tabId;
@@ -32,17 +35,20 @@ function PanelApp() {
   onMount(() => {
     chrome.storage.local.get("trafficVisibility").then(({ trafficVisibility: saved }) => {
       if (saved) applyTrafficVisibility(saved);
-    });
+    }).catch(() => showToast(t("preferencesSaveFailed"), "error"));
   });
 
-  chrome.storage.onChanged.addListener((changes, area) => {
+  const onStorageChanged = (changes, area) => {
     if (area === "local" && changes.rules) {
-      setRules(changes.rules.newValue || []);
+      try { setRules(validateRules(changes.rules.newValue || [])); }
+      catch (_) { send({ type: "GET_RULES" }).catch(() => {}); }
     }
     if (area === "local" && changes.trafficVisibility) {
       applyTrafficVisibility(changes.trafficVisibility.newValue);
     }
-  });
+  };
+  chrome.storage.onChanged.addListener(onStorageChanged);
+  onCleanup(() => chrome.storage.onChanged.removeListener(onStorageChanged));
 
   return (
     <div id="app">
@@ -50,7 +56,7 @@ function PanelApp() {
 
       <div id="main">
         <RequestList />
-        <RequestDetail renderRuleEditor={(req, directRule) => <RuleEditor req={req} directRule={directRule} />} />
+        <RequestDetail renderRuleEditor={(req, directRule, active) => <RuleEditor req={req} directRule={directRule} active={active} />} />
         <RulesSidebar />
       </div>
 

@@ -18,7 +18,7 @@ test("rule drafts prefer saved values and use the captured request as a fallback
   assert.equal(fromRequest.name, "/api/users");
   assert.equal(fromRequest.method, "POST");
   assert.equal(fromRequest.bodyContains, '"userId":42');
-  assert.equal(fromRequest.responseBody, '{\n  "ok": true\n}');
+  assert.equal(fromRequest.responseBody, '{"ok":true}');
 
   const fromRule = initialRuleDraft({ name: "Saved", bodyContains: "", resBody: "", blockRequest: true }, request);
   assert.equal(fromRule.name, "Saved");
@@ -50,4 +50,29 @@ test("diagnostics distinguish a matching rule from a failed method match", () =>
   const mismatch = buildRuleDiagnostics({ ...rule, method: "GET" }, [request], translate);
   assert.equal(mismatch.open, true);
   assert.equal(mismatch.rows.find((row) => row.label === "method:").ok, false);
+});
+
+
+test("editing rules preserves exact URLs, custom headers and body-preservation mode", () => {
+  const original = { id: "legacy", url: "https://example.com/api?exact=1", resHeaders: [{ name: "X-Test", value: "yes" }], enabled: true };
+  const draft = initialRuleDraft(original, null);
+  const saved = ruleFromDraft(draft, original.id, null);
+  assert.equal(saved.url, original.url);
+  assert.equal(saved.urlPattern, "");
+  assert.equal(saved.resBody, null);
+  assert.deepEqual(saved.resHeaders, original.resHeaders);
+  assert.throws(() => ruleFromDraft({ ...draft, statusCode: "999" }, original.id, null));
+});
+
+test('editing a broad rule does not inherit filters or status from its latest captured request', () => {
+  const original = {id:'broad', enabled:true, urlPattern:'.*'};
+  const draft = initialRuleDraft(original, {...request, method:'HEAD', resStatus:503, graphql:{operationName:'SpecificOperation'}});
+  assert.equal(draft.method, '*');
+  assert.equal(draft.operationName, '');
+  assert.equal(draft.bodyContains, '');
+  assert.equal(draft.statusCode, '');
+  const saved = ruleFromDraft(draft, original.id, request);
+  assert.equal(saved.statusCode, undefined);
+  assert.equal(saved.operationName, undefined);
+  assert.equal(saved.bodyContains, undefined);
 });

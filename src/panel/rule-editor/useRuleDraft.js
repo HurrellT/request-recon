@@ -8,13 +8,19 @@ export function useRuleDraft(props, existingRule) {
   const [draft, setDraft] = createStore(initialRuleDraft(null, null));
   const [dirty, setDirty] = createSignal(false);
   let currentTarget;
+  const drafts = new Map();
 
-  const targetKey = () => props.req ? `request:${props.req.id}` : props.directRule ? `rule:${props.directRule.id}` : "none";
+  const targetKey = () => props.directRule ? `rule:${props.directRule.id}` : props.req ? `request:${props.req.id}` : "none";
 
   createEffect(on([targetKey, existingRule], ([key, rule]) => {
     if (key !== currentTarget || !dirty()) {
-      setDraft(initialRuleDraft(rule, props.req));
-      setDirty(false);
+      if (key !== currentTarget && dirty()) {
+        drafts.set(currentTarget, { ...draft });
+        if (drafts.size > 20) drafts.delete(drafts.keys().next().value);
+      }
+      const savedDraft = drafts.get(key);
+      setDraft(savedDraft ?? initialRuleDraft(rule, props.req));
+      setDirty(!!savedDraft);
       currentTarget = key;
     }
   }));
@@ -27,6 +33,7 @@ export function useRuleDraft(props, existingRule) {
   const applyBlockDefaults = (nextBlockRequest = draft.blockRequest, nextBlockType = draft.blockType, nextBlockStatus = draft.blockStatus) => {
     if (nextBlockRequest && nextBlockType !== "network-fail" && !draft.responseBody.trim()) {
       update("responseBody", prettyJSON(JSON.stringify({ error: t("blockedRequest"), status: Number(nextBlockStatus) })));
+      update("overrideBody", true);
     }
   };
 
@@ -44,5 +51,9 @@ export function useRuleDraft(props, existingRule) {
     applyBlockDefaults(draft.blockRequest, draft.blockType, value);
   };
 
-  return { draft, update, applyBlockDefaults, updateBlockStatus };
+  const markSaved = (key = currentTarget) => {
+    drafts.delete(key);
+    if (key === currentTarget) setDirty(false);
+  };
+  return { draft, update, applyBlockDefaults, updateBlockStatus, markSaved, targetKey };
 }

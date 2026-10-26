@@ -18,7 +18,7 @@
   --text: #cccccc;
   --text-muted: #858585;
   --text-secondary: #969696;
-  --text-dim: #6a6a6a;
+  --text-dim: #969696;
   --text-bright: #ffffff;
   --accent: #0078d4;
   --accent-hover: #106ebe;
@@ -95,4 +95,8 @@ button {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #666;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
 }

@@ -4,8 +4,10 @@ Chrome DevTools extension for capturing requests and saving response override ru
 
 ## Development
 
+Requires Node.js 22.12+ and Chrome 118+.
+
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -22,6 +24,38 @@ In `chrome://extensions`, enable Developer mode and use **Load unpacked** to sel
 The DevTools panel hides CORS preflights, static resources, and framework navigation payloads by default. Open **Traffic / Tráfico** to show any category or choose **Show all / Mostrar todo**. The visible/total count in the request list reflects URL and method search before traffic is hidden.
 
 The filters only change the list: requests remain captured and response override rules still run. Failed requests and requests matched by an active rule stay visible. Visibility choices are saved in Chrome's local extension storage.
+
+## Capture and response overrides
+
+Capture runs while the DevTools panel is connected. Closing it stops capture and detaches the debugger after a two-second reconnect grace period. The popup also lets you stop all current capture sessions. Rules are shared across captured tabs; their URL match determines where they apply, including after navigation.
+
+Response headers/status and network failures are captured without waiting for response bodies. Text bodies are collected after loading completes, up to 256 KiB per response. Binary data, event streams, and larger responses retain their metadata but omit body previews. The panel retains at most 1,000 requests and approximately 32 MiB of request data. Capture is best-effort when Chrome evicts a body or the pending-request budget is exceeded.
+
+Request-body previews and body-filter matching use the first 64 KiB. GraphQL operation matching requires a complete JSON body within that limit. URLs longer than 16 KiB are not matched.
+
+Rules apply at the response stage. An explicit replacement body is sent immediately, so the original upstream body is unavailable for that request. Uncheck **Replace response body** to preserve the original bytes when changing only status or headers. Formatting JSON is an explicit editor action; saving preserves body text as entered.
+
+**Simulate response error** changes the client-visible result. The outbound request has already reached the server and can cause side effects; this feature does not prevent a POST or GraphQL mutation from running.
+
+## Rules and imports
+
+New request-derived URL patterns are anchored to the origin and exact path, while permitting different query parameters. Patterns use [RE2 syntax](https://github.com/google/re2/wiki/Syntax); backreferences and lookahead are unsupported. Unsupported or malformed saved rules are ignored with a warning, so they cannot block traffic. Legacy exact-URL rules remain supported.
+
+Imports accept a legacy rule object/array or the versioned export format. Incoming rules are validated and start **disabled**. Enable them deliberately after reviewing their URL scope and replacement response. Import preserves file order and creates a new ID on a collision, retaining the existing rule. The first enabled matching rule in list order takes precedence.
+
+Limits are 500 rules, 1 MiB per replacement body, and 8 MiB per import/export. Invalid status codes, headers, field types, patterns, and duplicate IDs in one file are rejected. All rule mutations are serialized by the service worker; success messages appear only after storage succeeds.
+
+Rules, response fixtures, and request-body filters are saved locally in extension storage. Exports include these values verbatim and can contain personal data or credentials; review files before sharing. Inspected-page notifications show a generic label rather than rule names or URLs. No request data is uploaded by this extension.
+
+## Verification
+
+```bash
+npm test
+npm run build
+npm audit
+```
+
+Tests exercise debugger lifecycle failures, paused-request recovery, streaming and body-size policies, binary preservation, concurrent mutations, import validation/order, command acknowledgements, matching, and UI helpers. CI runs tests, the production build, and the dependency audit.
 
 ## Languages
 

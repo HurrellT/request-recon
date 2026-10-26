@@ -4,6 +4,7 @@
   "private": true,
   "license": "MPL-2.0",
   "type": "module",
+  "engines": { "node": ">=22.12.0" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
@@ -17,6 +18,7 @@
     "@codemirror/state": "^6.7.6",
     "@lezer/highlight": "^1.2.5",
     "codemirror": "^6.0.2",
+    "re2js": "^2.8.6",
     "solid-js": "^1.9.14"
   },
   "devDependencies": {

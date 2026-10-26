@@ -12,6 +12,8 @@ import { PopupRuleList } from "./PopupRuleList";
 function PopupApp() {
   const [rules, setRules] = createSignal([]);
   const [notice, setNotice] = createSignal(null);
+  const [busy, setBusy] = createSignal(false);
+  const [sessions, setSessions] = createSignal([]);
   let noticeTimer;
   const activeCount = createMemo(() => rules().filter((rule) => rule.enabled).length);
   const anyActive = createMemo(() => rules().some((rule) => rule.enabled));
@@ -24,36 +26,40 @@ function PopupApp() {
 
   const loadRules = async () => {
     try {
-      const { rules: stored = [] } = await chrome.storage.local.get("rules");
-      setRules(stored);
+      const reply = await chrome.runtime.sendMessage({ type: "GET_RULES" });
+      if (!reply?.ok) throw new Error("Could not load rules");
+      setRules(reply.rules || []);
+      setSessions(reply.activeSessions || []);
     } catch (_) {
       showSaveError();
     }
   };
 
-  const saveRules = async (updated) => {
+  const mutate = async (message) => {
+    if (busy()) return;
+    setBusy(true);
     try {
-      await chrome.storage.local.set({ rules: updated });
-      setRules(updated);
+      const reply = await chrome.runtime.sendMessage(message);
+      if (!reply?.ok) throw new Error("Could not save rules");
+      if (reply.rules) setRules(reply.rules);
+      if (reply.activeSessions) setSessions(reply.activeSessions);
     } catch (_) {
       showSaveError();
-    }
+    } finally { setBusy(false); }
   };
 
   const toggleRule = async (ruleId, enabled) => {
-    const updated = rules().map((rule) => (rule.id === ruleId ? { ...rule, enabled, updatedAt: new Date().toISOString() } : rule));
-    await saveRules(updated);
+    await mutate({ type: "TOGGLE_RULE", ruleId, enabled });
   };
 
   const toggleAll = async () => {
     const enabled = !anyActive();
-    const updated = rules().map((rule) => ({ ...rule, enabled, updatedAt: new Date().toISOString() }));
-    await saveRules(updated);
+    await mutate({ type: "TOGGLE_ALL", enabled });
   };
 
   const onStorageChanged = (changes, area) => {
     if (area === "local" && changes.rules) {
-      setRules(changes.rules.newValue || []);
+      loadRules();
     }
   };
 
@@ -74,8 +80,8 @@ function PopupApp() {
   return (
     <div class="popup-shell">
       <PopupHeader activeCount={activeCount()} />
-      <PopupRuleList rules={rules()} onToggle={toggleRule} />
-      <PopupFooter hasRules={rules().length > 0} anyActive={anyActive()} onToggleAll={toggleAll} />
+      <PopupRuleList rules={rules()} onToggle={toggleRule} busy={busy()} />
+      <PopupFooter hasRules={rules().length > 0} anyActive={anyActive()} onToggleAll={toggleAll} busy={busy()} sessionCount={sessions().length} onStopCapture={() => mutate({ type: "STOP_ALL" })} />
       <Toast toast={notice()} />
     </div>
   );

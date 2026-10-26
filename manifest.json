@@ -2,12 +2,12 @@
   "manifest_version": 3,
   "name": "Request Recon",
   "version": "1.0.0",
+  "minimum_chrome_version": "118",
   "default_locale": "es",
   "description": "__MSG_extensionDescription__",
   "permissions": [
     "debugger",
-    "storage",
-    "tabs"
+    "storage"
   ],
   "background": {
     "service_worker": "background/service-worker.js",

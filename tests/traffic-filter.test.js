@@ -53,6 +53,7 @@ test("shows hidden categories on demand and always exposes errors and matched ru
   assert.equal(isHiddenByTrafficFilter(rsc, { ...DEFAULT_TRAFFIC_VISIBILITY, navigation: true }), false);
   assert.equal(isHiddenByTrafficFilter(request("https://dummyjson.com/users/1"), DEFAULT_TRAFFIC_VISIBILITY), false);
   assert.equal(isHiddenByTrafficFilter({ ...rsc, resStatus: 500 }, DEFAULT_TRAFFIC_VISIBILITY), false);
+  assert.equal(isHiddenByTrafficFilter({ ...rsc, responseErrorReason: "ConnectionRefused" }, DEFAULT_TRAFFIC_VISIBILITY), false);
   assert.equal(isHiddenByTrafficFilter({ ...rsc, ruleId: "rule-1" }, DEFAULT_TRAFFIC_VISIBILITY), false);
   assert.equal(isHiddenByTrafficFilter({ ...rsc, ruleApplied: true }, DEFAULT_TRAFFIC_VISIBILITY), false);
 });

@@ -12,8 +12,11 @@ export function RuleMatchFields(props) {
         {({ id }) => <Input id={id} variant="form" type="text" placeholder={t("namePlaceholder")} value={draft.name} onInput={(event) => update("name", event.currentTarget.value)} />}
       </FormField>
 
-      <FormField label={t("urlPattern")} note="(regex)" hint={<>{t("regexHint")} <code>/api/users</code> {t("or")} <code>api\.example\.com/graphql</code></>}>
-        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="text" spellcheck={false} value={draft.urlPattern} onInput={(event) => update("urlPattern", event.currentTarget.value)} />}
+      <FormField label={draft.url && !draft.urlPattern ? t("exactURL") : t("urlPattern")} note={draft.url && !draft.urlPattern ? "" : "(RE2)"} hint={t("safeRegexHint")}>
+        {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="text" spellcheck={false} value={draft.urlPattern || draft.url} onInput={(event) => {
+          if (draft.url && !draft.urlPattern) update("url", event.currentTarget.value);
+          else update("urlPattern", event.currentTarget.value);
+        }} />}
       </FormField>
 
       <div class="form-row">
@@ -25,8 +28,8 @@ export function RuleMatchFields(props) {
             </Select>
           )}
         </FormField>
-        <FormField label={t("statusCode")}>
-          {({ id }) => <Input id={id} variant="form" type="number" min="100" max="599" value={draft.statusCode} onInput={(event) => update("statusCode", event.currentTarget.value)} />}
+        <FormField label={t("statusCode")} hint={t("preserveStatusHint")}>
+          {({ id, describedBy }) => <Input id={id} aria-describedby={describedBy} variant="form" type="number" min="200" max="599" value={draft.statusCode} onInput={(event) => update("statusCode", event.currentTarget.value)} />}
         </FormField>
       </div>
 

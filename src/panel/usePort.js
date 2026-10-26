@@ -1,6 +1,5 @@
 import { onCleanup, onMount } from "solid-js";
-import { addRequest, downloadJSON, findRule, setIsRecording, setPort, setRules, showToast } from "./store";
-import { getPath } from "../lib/request-utils";
+import { addRequest, findRule, receiveCommandReply, setIsRecording, setPort, setRules, showToast } from "./store";
 import { t } from "../lib/i18n";
 import boltSvg from "../assets/icons/bolt.svg?raw";
 
@@ -8,12 +7,16 @@ export function usePort(tabId) {
   let reconnectTimer = null;
   let keepaliveTimer = null;
   let activePort = null;
+  let disposed = false;
 
   const connect = () => {
+    if (disposed) return;
     activePort = chrome.runtime.connect({ name: `panel-${tabId}` });
+    const connectedPort = activePort;
     setPort(activePort);
 
     activePort.onMessage.addListener((msg) => {
+      if (disposed || activePort !== connectedPort || receiveCommandReply(msg)) return;
       switch (msg.type) {
         case "STATUS":
           setIsRecording(msg.active);
@@ -31,26 +34,26 @@ export function usePort(tabId) {
         case "ERROR":
           showToast(msg.errorKey ? t(msg.errorKey, msg.params) : msg.message, "error");
           break;
-        case "EXPORT_DATA":
-          downloadJSON(msg.data, "request-recon-rules.json");
-          break;
       }
     });
 
     activePort.onDisconnect.addListener(() => {
+      if (disposed || activePort !== connectedPort) return;
       setPort(null);
+      setIsRecording(false);
       activePort = null;
       clearInterval(keepaliveTimer);
       reconnectTimer = setTimeout(connect, 800);
     });
 
     keepaliveTimer = setInterval(() => {
-      activePort?.postMessage({ type: "KEEPALIVE" });
+      try { activePort?.postMessage({ type: "KEEPALIVE" }); } catch (_) {}
     }, 20_000);
   };
 
   onMount(connect);
   onCleanup(() => {
+    disposed = true;
     clearTimeout(reconnectTimer);
     clearInterval(keepaliveTimer);
     activePort?.disconnect();
@@ -59,7 +62,8 @@ export function usePort(tabId) {
 }
 
 function injectPageToast(reqData, rule) {
-  const label = rule.name || reqData.graphql?.operationName || getPath(reqData.url);
+  // The inspected page can observe this DOM; keep rule names and URLs private.
+  const label = t("responseOverrideApplied");
   // Read the vector path from the same bundled Tabler asset used by the panel.
   const boltPath = boltSvg.match(/<path d="([^"]+)"/)?.[1] ?? "";
   const payload = JSON.stringify({
@@ -97,6 +101,7 @@ function injectPageToast(reqData, rule) {
       }
 
       const toast = document.createElement('div');
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
       Object.assign(toast.style, {
         background: '#141f16',
         border: '1px solid #4ec9b0',
@@ -105,7 +110,7 @@ function injectPageToast(reqData, rule) {
         display: 'flex', alignItems: 'flex-start', gap: '10px',
         maxWidth: '340px',
         boxShadow: '0 4px 20px rgba(0,0,0,0.55)',
-        animation: '__rr_in 0.18s ease'
+        animation: reducedMotion ? 'none' : '__rr_in 0.18s ease'
       });
 
       const svgNS = 'http://www.w3.org/2000/svg';
@@ -159,7 +164,7 @@ function injectPageToast(reqData, rule) {
       container.appendChild(toast);
 
       setTimeout(function() {
-        toast.style.animation = '__rr_out 0.22s ease forwards';
+        toast.style.animation = reducedMotion ? 'none' : '__rr_out 0.22s ease forwards';
         setTimeout(function() { toast.remove(); }, 220);
       }, 3200);
 

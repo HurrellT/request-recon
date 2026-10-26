@@ -26,7 +26,7 @@ export function initializeLanguage() {
   chrome.storage.onChanged.addListener(onChanged);
   chrome.storage.local.get("language").then(({ language: saved }) => {
     if (active && languageVersion === initialVersion && saved) setLanguage(normalizeLanguage(saved));
-  });
+  }).catch(() => { /* retain the browser/current language if storage is unavailable */ });
   return () => {
     active = false;
     chrome.storage.onChanged.removeListener(onChanged);

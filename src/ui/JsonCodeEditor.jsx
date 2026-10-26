@@ -30,7 +30,7 @@ const parseJSON = jsonParseLinter();
 
 function lintJSONBody(view) {
   // A response body may be plain text. Only report JSON errors for object/array drafts.
-  if (!/^\s*[\[{]/.test(view.state.doc.toString())) return [];
+  if (view.state.doc.length > 64 * 1024 || !/^\s*[\[{]/.test(view.state.doc.toString())) return [];
   return parseJSON(view);
 }
 

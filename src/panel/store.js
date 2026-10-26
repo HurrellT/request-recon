@@ -1,5 +1,9 @@
 import { createMemo, createSignal } from "solid-js";
 import { MAX_REQUESTS, getRequestLabel, requestRuleState, ruleMatchesRequest } from "../lib/request-utils";
+import { MAX_CAPTURE_BYTES, requestBytes } from "../lib/limits";
+import { findActiveRule } from "../lib/rule-matcher";
+import { createCommandClient } from "../lib/command-client";
+import { t } from "../lib/i18n";
 import { DEFAULT_TRAFFIC_VISIBILITY, TRAFFIC_CATEGORIES, getTrafficCategory, isHiddenByTrafficFilter } from "../lib/traffic-filter";
 
 export const [requests, setRequests] = createSignal([]);
@@ -14,23 +18,44 @@ export const [methodFilter, setMethodFilter] = createSignal("");
 export const [trafficVisibility, setTrafficVisibility] = createSignal({ ...DEFAULT_TRAFFIC_VISIBILITY });
 export const [toast, setToast] = createSignal(null);
 
-let port = null;
 let toastTimer = null;
+const requestSizes = new Map();
+let retainedBytes = 0;
+const commands = createCommandClient({
+  onReply: (reply) => {
+    if (reply.rules) setRules(reply.rules);
+    if (reply.active !== undefined) setIsRecording(reply.active);
+    if (reply.data) downloadJSON(reply.data, "request-recon-rules.json");
+  },
+  onError: (error) => showToast(error.reply ? t(error.reply.errorKey, error.reply.params) : t("commandFailed", { details: error.message }), "error"),
+});
 
 export function setPort(nextPort) {
-  port = nextPort;
+  commands.setPort(nextPort);
 }
 
+export const receiveCommandReply = (reply) => commands.receive(reply);
+
 export function send(msg) {
-  port?.postMessage(msg);
+  return commands.send(msg);
 }
 
 export function addRequest(req) {
   setRequests((prev) => {
-    const next = prev.length >= MAX_REQUESTS ? prev.slice(1) : prev.slice();
+    const next = prev.slice();
     const idx = next.findIndex((item) => item.id === req.id);
-    if (idx >= 0) next[idx] = req;
-    else next.push(req);
+    retainedBytes -= requestSizes.get(req.id) || 0;
+    const entry = { ...req, trafficCategory: getTrafficCategory(req) };
+    const size = requestBytes(entry);
+    requestSizes.set(req.id, size);
+    retainedBytes += size;
+    if (idx >= 0) next[idx] = entry;
+    else next.push(entry);
+    while (next.length > MAX_REQUESTS || retainedBytes > MAX_CAPTURE_BYTES) {
+      const removed = next.shift();
+      retainedBytes -= requestSizes.get(removed.id) || 0;
+      requestSizes.delete(removed.id);
+    }
     return next;
   });
 }
@@ -46,12 +71,14 @@ export function findRule(ruleId) {
 
 export function findMatchingRuleForRequest(req) {
   if (!req) return null;
-  return rules().find((rule) => ruleMatchesRequest(rule, req)) ?? null;
+  return findActiveRule(rules(), req) ?? rules().find((rule) => ruleMatchesRequest(rule, req)) ?? null;
 }
+
+export const currentDirectRule = createMemo(() => directEditRule() ? findRule(directEditRule().id) : null);
 
 export function ruleStateForRequest(req) {
   if (!req) return null;
-  const matchedRule = (req.ruleId ? findRule(req.ruleId) : null) ?? findMatchingRuleForRequest(req);
+  const matchedRule = req.ruleApplied ? findRule(req.ruleId) : findActiveRule(rules(), req);
   return requestRuleState(req, matchedRule);
 }
 
@@ -66,13 +93,13 @@ export function updateTrafficVisibility(category, show) {
   if (!TRAFFIC_CATEGORIES.includes(category)) return;
   const next = { ...trafficVisibility(), [category]: show };
   setTrafficVisibility(next);
-  chrome.storage.local.set({ trafficVisibility: next });
+  chrome.storage.local.set({ trafficVisibility: next }).catch(() => showToast(t("preferencesSaveFailed"), "error"));
 }
 
 export function setAllTrafficVisible(show) {
   const next = Object.fromEntries(TRAFFIC_CATEGORIES.map((category) => [category, show]));
   setTrafficVisibility(next);
-  chrome.storage.local.set({ trafficVisibility: next });
+  chrome.storage.local.set({ trafficVisibility: next }).catch(() => showToast(t("preferencesSaveFailed"), "error"));
 }
 
 export const matchingRequests = createMemo(() => {
@@ -99,7 +126,7 @@ export const hiddenCategoryCounts = createMemo(() => {
   const visibility = trafficVisibility();
   for (const req of matchingRequests()) {
     if (!isHiddenByTrafficFilter(req, visibility)) continue;
-    counts[getTrafficCategory(req)]++;
+    counts[req.trafficCategory ?? getTrafficCategory(req)]++;
   }
   return counts;
 });
@@ -109,6 +136,8 @@ export const hiddenRequestCount = createMemo(() => Object.values(hiddenCategoryC
 export const visibleRequests = createMemo(() => matchingRequests().filter((req) => !isHiddenByTrafficFilter(req, trafficVisibility())));
 
 export function clearRequests() {
+  requestSizes.clear();
+  retainedBytes = 0;
   setRequests([]);
   setSelectedId(null);
   setDirectEditRule(null);

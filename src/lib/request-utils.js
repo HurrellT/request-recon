@@ -1,5 +1,6 @@
-export const MAX_REQUESTS = 1000;
-export const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
+export { MAX_REQUESTS } from "./limits.js";
+export { ruleMatchesRequest } from "./rule-matcher.js";
+export const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"];
 
 export function methodCSSClass(method) {
   const m = (method || "").toUpperCase();
@@ -27,7 +28,7 @@ export function statusBadgeClass(code) {
 }
 
 export function getResponseOutcome(req) {
-  if (req?.networkFailureApplied) return { status: null, networkFailure: true };
+  if (req?.networkFailureApplied || (req?.responseErrorReason && !req?.ruleApplied)) return { status: null, networkFailure: true };
   return { status: req?.appliedStatus ?? req?.resStatus ?? null, networkFailure: false };
 }
 
@@ -54,7 +55,7 @@ export function getPath(url) {
 export function urlToPattern(url) {
   try {
     const parsed = new URL(url);
-    return `${escapeRegex(parsed.origin)}${escapeRegex(parsed.pathname)}`;
+    return `^${escapeRegex(parsed.origin)}${escapeRegex(parsed.pathname)}(?:[?]|$)`;
   } catch (_) {
     return escapeRegex(url || "");
   }
@@ -92,30 +93,6 @@ export function shortPattern(pattern) {
   } catch (_) {
     return truncate(pattern, 36);
   }
-}
-
-export function ruleMatchesRequest(rule, req) {
-  let urlOk;
-  if (rule.urlPattern) {
-    try {
-      urlOk = new RegExp(rule.urlPattern, "i").test(req.url);
-    } catch (_) {
-      urlOk = req.url.includes(rule.urlPattern);
-    }
-  } else {
-    urlOk = req.url === rule.url;
-  }
-  if (!urlOk) return false;
-  if (rule.method && rule.method !== "*" && rule.method.toUpperCase() !== req.method.toUpperCase()) {
-    return false;
-  }
-  if (rule.operationName && (!req.graphql || req.graphql.operationName !== rule.operationName)) {
-    return false;
-  }
-  if (rule.bodyContains && rule.bodyContains.trim()) {
-    if (!req.reqBody || !req.reqBody.includes(rule.bodyContains.trim())) return false;
-  }
-  return true;
 }
 
 export function getBodySummary(req) {
