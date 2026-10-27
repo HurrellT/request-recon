@@ -6,6 +6,8 @@
 
 <p align="center">Chrome DevTools extension for capturing requests and saving response override rules.</p>
 
+> **AI-assisted development:** Request Recon was developed with assistance from AI tools.
+
 ## Screenshots
 
 Inspect captured requests, response headers, and JSON bodies directly in Chrome DevTools.
