@@ -10,10 +10,12 @@ import { RuleActions } from "./RuleActions";
 import { RuleContextBanner } from "./RuleContextBanner";
 import { RuleDiagnostics } from "./RuleDiagnostics";
 import { RuleMatchFields } from "./RuleMatchFields";
+import { AiRuleGenerator } from "./AiRuleGenerator";
 
 export function RuleEditor(props) {
-  const existingRule = createMemo(() => props.directRule ?? (props.req?.ruleId ? findRule(props.req.ruleId) : null) ?? (props.req ? findMatchingRuleForRequest(props.req) : null));
-  const draftState = useRuleDraft(props, existingRule);
+  const matchingRule = createMemo(() => props.directRule ?? (props.req?.ruleId ? findRule(props.req.ruleId) : null) ?? (props.req ? findMatchingRuleForRequest(props.req) : null));
+  const draftState = useRuleDraft(props, matchingRule);
+  const existingRule = draftState.rule;
   const [busy, setBusy] = createSignal(false);
   const ruleId = createMemo(() => existingRule()?.id ?? null);
   const showGraphQL = createMemo(() => props.req ? !!props.req.graphql : existingRule()?.operationName != null);
@@ -69,6 +71,9 @@ export function RuleEditor(props) {
   return (
     <div class="rule-editor" aria-busy={busy()} inert={busy()}>
       <RuleContextBanner request={props.req} rule={existingRule()} intercepted={intercepted()} />
+      <Show when={props.req}>
+        <AiRuleGenerator request={props.req} active={props.active !== false} targetKey={draftState.targetKey()} onApply={draftState.startGeneratedDraft} />
+      </Show>
       <Show when={diagnostics()}>{(result) => <RuleDiagnostics diag={result()} />}</Show>
       <RuleMatchFields draft={draftState.draft} update={draftState.update} showGraphQL={showGraphQL()} />
       <ErrorSimulationFields

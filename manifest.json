@@ -15,6 +15,10 @@
     "debugger",
     "storage"
   ],
+  "optional_host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
   "background": {
     "service_worker": "background/service-worker.js",
     "type": "module"

@@ -225,8 +225,9 @@
   cursor: pointer;
 }
 .btn-primary { background: var(--accent); border-color: var(--accent); color: white; }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:hover:not(:disabled) { background: var(--accent-hover); }
 .btn-secondary { background: var(--bg-input); color: var(--text); }
-.btn-secondary:hover { background: var(--bg-hover); }
+.btn-secondary:hover:not(:disabled) { background: var(--bg-hover); }
 .btn-danger { background: var(--red-dim); border-color: var(--red); color: var(--red); }
-.btn-danger:hover { background: #6a1d1d; }
+.btn-danger:hover:not(:disabled) { background: #6a1d1d; }
+.btn:disabled { opacity: 0.45; cursor: not-allowed; filter: grayscale(0.5); }

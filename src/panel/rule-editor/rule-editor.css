@@ -104,6 +104,29 @@
 
 .body-editor-actions { display: flex; gap: 4px; }
 
+.ai-generator {
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius);
+  min-width: 0;
+}
+.ai-generator > summary { padding: 9px 10px; color: var(--text); cursor: pointer; }
+.ai-generator-content,
+.ai-generator fieldset,
+.ai-preview { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.ai-generator-content { padding: 0 10px 10px; }
+.ai-generator fieldset { margin: 0; padding: 0; border: 0; }
+.ai-generator fieldset:disabled { opacity: 0.6; }
+.ai-hint { font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.ai-disclosure { padding: 8px; background: var(--bg-input); font-size: 11px; line-height: 1.5; overflow-wrap: anywhere; }
+.ai-generator .ai-sample { min-height: 110px; max-height: 280px; }
+.ai-generator .ai-prompt { min-height: 70px; }
+.ai-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.ai-error { color: var(--red); font-size: 12px; }
+.ai-preview { border-top: 1px solid var(--border); padding-top: 10px; }
+.ai-preview pre { max-height: 300px; overflow: auto; padding: 8px; background: var(--bg-input); white-space: pre-wrap; overflow-wrap: anywhere; font-family: var(--font-mono); }
+.ai-preview > button { align-self: flex-start; }
+.ai-model-picker { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+
 @media (max-width: 440px) {
   .form-row { flex-wrap: wrap; }
   .form-row .form-group { min-width: min(100%, 180px); }

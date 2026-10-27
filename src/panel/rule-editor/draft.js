@@ -1,5 +1,6 @@
 import { getPath, prettyJSON, suggestBodyFilter, urlToPattern } from "../../lib/request-utils.js";
 import { validateRule } from "../../lib/rules.js";
+import { validateGeneratedResponse } from "../../lib/llm.js";
 
 export function initialRuleDraft(rule, request) {
   return {
@@ -41,4 +42,15 @@ export function ruleFromDraft(draft, ruleId, request) {
     blockType: draft.blockType,
     blockStatus,
   });
+}
+
+export function draftFromGeneration(request, value) {
+  const generated = validateGeneratedResponse(value);
+  return {
+    ...initialRuleDraft(null, request),
+    name: generated.name,
+    statusCode: generated.statusCode,
+    responseBody: generated.body,
+    overrideBody: true,
+  };
 }
