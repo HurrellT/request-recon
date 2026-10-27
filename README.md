@@ -1,6 +1,46 @@
-# Request Recon
+<p align="center">
+  <img src="assets/request-recon-logo.png" alt="Request Recon logo" width="160" height="160" />
+</p>
 
-Chrome DevTools extension for capturing requests and saving response override rules.
+<h1 align="center">Request Recon</h1>
+
+<p align="center">Chrome DevTools extension for capturing requests and saving response override rules.</p>
+
+## Screenshots
+
+Inspect captured requests, response headers, and JSON bodies directly in Chrome DevTools.
+
+![Request Recon DevTools panel showing captured requests, response headers, and a JSON response body](assets/screenshots/1.png)
+
+<details>
+<summary>REST response override workflow</summary>
+
+Create a rule from a captured request and edit its replacement response body.
+
+![Response rule editor with URL matching, HTTP method, status code, and an edited JSON body](assets/screenshots/2.png)
+
+Save and manage rules in the sidebar. Repeat the request to apply a newly saved rule.
+
+![Saved rule in the sidebar with a reminder to repeat the request before the override can apply](assets/screenshots/3.png)
+
+See the overridden response in the page and the intercepted request in the panel.
+
+![REST response override applied, with the modified JSON displayed in the browser](assets/screenshots/4.png)
+
+</details>
+
+<details>
+<summary>GraphQL response overrides</summary>
+
+Match a GraphQL request by operation name and customize its response.
+
+![GraphQL response rule matching the GetUser operation and showing its JSON response body](assets/screenshots/5.png)
+
+Repeat the operation to see the modified result and the override notification.
+
+![GraphQL GetUser response overridden with a modified user ID and an on-page confirmation](assets/screenshots/6.png)
+
+</details>
 
 ## Development
 
