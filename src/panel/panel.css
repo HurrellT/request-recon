@@ -12,6 +12,15 @@
   overflow: hidden;
 }
 
+.panel-support {
+  display: flex;
+  flex: none;
+  justify-content: flex-end;
+  padding: 2px 8px;
+  border-top: 1px solid var(--border);
+  background: var(--bg-panel);
+}
+
 .btn-icon:hover,
 .section-header:hover {
   background: var(--bg-hover);

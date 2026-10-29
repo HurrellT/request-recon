@@ -136,6 +136,10 @@ AI tests use synthetic provider responses to verify protocol payloads, data mini
 
 The panel and extension popup support English and Spanish. They start in the browser's language (English for other browser languages). Use the **EN / ES** selector in the panel or the language selector in the popup to change it. The choice is saved in Chrome's local extension storage and shared between both views.
 
+## Support
+
+If Request Recon is useful to you, you can [buy me a coffee on Ko-fi](https://ko-fi.com/hurrellt). The popup and DevTools panel also include a donation link that opens Ko-fi in a new tab.
+
 ## License
 
 Request Recon source code is licensed under the Mozilla Public License 2.0; see [LICENSE](LICENSE). Third-party assets and libraries retain their own licenses. Tabler Icons and bundled library notices are in [THIRD_PARTY_NOTICES.txt](THIRD_PARTY_NOTICES.txt). Both notice files are included in the built extension.

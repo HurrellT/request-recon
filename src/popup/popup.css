@@ -91,6 +91,13 @@ body { overflow: visible; }
 .popup-toggle-all { align-self: flex-start; padding: 4px 9px; font-size: 11px; }
 .popup-footer-hint { color: var(--text-secondary); font-size: 10px; }
 
+.popup-support {
+  display: flex;
+  justify-content: center;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
+}
+
 .popup-language {
   display: flex;
   align-items: center;

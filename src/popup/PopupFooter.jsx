@@ -1,6 +1,7 @@
 import { Show } from "solid-js";
 import { chooseLanguage, language, t } from "../lib/i18n";
 import { Button, FieldLabel, Select } from "../ui/Controls";
+import { DonationLink } from "../ui/DonationLink";
 
 export function PopupFooter(props) {
   return (
@@ -20,6 +21,9 @@ export function PopupFooter(props) {
           <option value="es">Español</option>
           <option value="en">English</option>
         </Select>
+      </div>
+      <div class="popup-support">
+        <DonationLink />
       </div>
     </footer>
   );

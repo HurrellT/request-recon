@@ -14,6 +14,7 @@ import { RequestDetail } from "./detail/RequestDetail";
 import { RuleEditor } from "./rule-editor/RuleEditor";
 import { RulesSidebar } from "./rules-sidebar/RulesSidebar";
 import { Toast } from "../ui/Toast";
+import { DonationLink } from "../ui/DonationLink";
 import {
   applyTrafficVisibility,
   setRules,
@@ -59,6 +60,10 @@ function PanelApp() {
         <RequestDetail renderRuleEditor={(req, directRule, active) => <RuleEditor req={req} directRule={directRule} active={active} />} />
         <RulesSidebar />
       </div>
+
+      <footer class="panel-support">
+        <DonationLink />
+      </footer>
 
       <Toast toast={toast()} />
     </div>
