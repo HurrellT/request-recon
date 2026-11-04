@@ -8,6 +8,11 @@
 
 > **AI-assisted development:** Request Recon was developed with assistance from AI tools.
 
+[Install on Google Chrome](https://chromewebstore.google.com/detail/request-recon/ejcfbfnakgdgiiknapdkhdkfminchkja)
+
+[<img width="400" alt="install on google chrome" src="https://github.com/user-attachments/assets/78d1463a-eb04-412e-8b49-1b2777da9203" />](https://chromewebstore.google.com/detail/request-recon/ejcfbfnakgdgiiknapdkhdkfminchkja)
+
+
 ## Screenshots
 
 Inspect captured requests, response headers, and JSON bodies directly in Chrome DevTools.
