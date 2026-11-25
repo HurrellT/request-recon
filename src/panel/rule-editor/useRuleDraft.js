@@ -1,5 +1,4 @@
-import { createEffect, createSignal, on } from "solid-js";
-import { createStore } from "solid-js/store";
+import { createEffect, createSignal, createStore } from "solid-js";
 import { prettyJSON } from "../../lib/request-utils.js";
 import { t } from "../../lib/i18n.js";
 import { draftFromGeneration, initialRuleDraft } from "./draft.js";
@@ -15,23 +14,23 @@ export function useRuleDraft(props, existingRule) {
   const rule = () => newRuleSelection() === selectionKey() ? null : existingRule();
   const targetKey = () => `${selectionKey()}${newRuleSelection() === selectionKey() ? ":new" : ""}`;
 
-  createEffect(on(selectionKey, () => setNewRuleSelection(null)));
+  createEffect(selectionKey, () => { setNewRuleSelection(null); });
 
-  createEffect(on([targetKey, rule], ([key, rule]) => {
+  createEffect(() => [targetKey(), rule()], ([key, rule]) => {
     if (key !== currentTarget || !dirty()) {
       if (key !== currentTarget && dirty()) {
         drafts.set(currentTarget, { ...draft });
         if (drafts.size > 20) drafts.delete(drafts.keys().next().value);
       }
       const savedDraft = drafts.get(key);
-      setDraft(savedDraft ?? initialRuleDraft(rule, props.req));
+      setDraft((pending) => { Object.assign(pending, savedDraft ?? initialRuleDraft(rule, props.req)); });
       setDirty(!!savedDraft);
       currentTarget = key;
     }
-  }));
+  });
 
   const update = (field, value) => {
-    setDraft(field, value);
+    setDraft((pending) => { pending[field] = value; });
     setDirty(true);
   };
 
@@ -64,10 +63,11 @@ export function useRuleDraft(props, existingRule) {
     if (!props.req) return;
     const next = draftFromGeneration(props.req, proposal);
     if (dirty()) drafts.set(currentTarget, { ...draft });
-    setNewRuleSelection(selectionKey());
-    currentTarget = targetKey();
+    const key = selectionKey();
+    setNewRuleSelection(key);
+    currentTarget = `${key}:new`;
     drafts.delete(currentTarget);
-    setDraft(next);
+    setDraft((pending) => { Object.assign(pending, next); });
     setDirty(true);
   };
   return { draft, rule, update, applyBlockDefaults, updateBlockStatus, markSaved, targetKey, startGeneratedDraft };

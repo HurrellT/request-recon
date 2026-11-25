@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
 import { readFileSync } from "node:fs";
-import solid from "vite-plugin-solid";
+import solid from "@solidjs/vite-plugin";
 import { crx } from "@crxjs/vite-plugin";
 import manifest from "./manifest.json" with { type: "json" };
 

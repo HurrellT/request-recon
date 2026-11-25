@@ -1,5 +1,5 @@
-import { render } from "solid-js/web";
-import { createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import { render } from "@solidjs/web";
+import { createEffect, createMemo, createSignal, onCleanup, onSettled } from "solid-js";
 import "../styles.css";
 import "../ui/ui.css";
 import "./popup.css";
@@ -63,14 +63,14 @@ function PopupApp() {
     }
   };
 
-  onMount(() => {
+  onSettled(() => {
     loadRules();
     chrome.storage.onChanged.addListener(onStorageChanged);
   });
 
   const cleanupLanguage = initializeLanguage();
   onCleanup(cleanupLanguage);
-  createEffect(() => { document.documentElement.lang = language(); });
+  createEffect(language, (value) => { document.documentElement.lang = value; });
 
   onCleanup(() => {
     chrome.storage.onChanged.removeListener(onStorageChanged);

@@ -1,6 +1,6 @@
 {
   "name": "request-recon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "license": "MPL-2.0",
   "type": "module",
@@ -13,17 +13,18 @@
   },
   "dependencies": {
     "@codemirror/lang-json": "^6.0.2",
-    "@codemirror/language": "^6.12.4",
-    "@codemirror/lint": "^6.9.7",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/lint": "^6.9.8",
     "@codemirror/state": "^6.7.6",
     "@lezer/highlight": "^1.2.5",
+    "@solidjs/web": "^2.0.4",
     "codemirror": "^6.0.2",
-    "re2js": "^2.9.1",
-    "solid-js": "^1.9.14"
+    "re2js": "^2.10.0",
+    "solid-js": "^2.0.4"
   },
   "devDependencies": {
-    "@crxjs/vite-plugin": "^2.7.1",
-    "vite": "^8.1.5",
-    "vite-plugin-solid": "^2.11.13"
+    "@crxjs/vite-plugin": "^3.0.0",
+    "@solidjs/vite-plugin": "^3.0.1",
+    "vite": "^8.3.8"
   }
 }

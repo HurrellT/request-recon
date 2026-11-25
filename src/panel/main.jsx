@@ -1,5 +1,5 @@
-import { render } from "solid-js/web";
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { render } from "@solidjs/web";
+import { createEffect, onCleanup, onSettled } from "solid-js";
 import "../styles.css";
 import "../ui/ui.css";
 import "./panel.css";
@@ -11,7 +11,6 @@ import "./rules-sidebar/rules-sidebar.css";
 import { PanelToolbar } from "./toolbar/PanelToolbar";
 import { RequestList } from "./request-list/RequestList";
 import { RequestDetail } from "./detail/RequestDetail";
-import { RuleEditor } from "./rule-editor/RuleEditor";
 import { RulesSidebar } from "./rules-sidebar/RulesSidebar";
 import { Toast } from "../ui/Toast";
 import { DonationLink } from "../ui/DonationLink";
@@ -31,9 +30,9 @@ function PanelApp() {
   usePort(tabId);
   const cleanupLanguage = initializeLanguage();
   onCleanup(cleanupLanguage);
-  createEffect(() => { document.documentElement.lang = language(); });
+  createEffect(language, (value) => { document.documentElement.lang = value; });
 
-  onMount(() => {
+  onSettled(() => {
     chrome.storage.local.get("trafficVisibility").then(({ trafficVisibility: saved }) => {
       if (saved) applyTrafficVisibility(saved);
     }).catch(() => showToast(t("preferencesSaveFailed"), "error"));
@@ -57,7 +56,7 @@ function PanelApp() {
 
       <div id="main">
         <RequestList />
-        <RequestDetail renderRuleEditor={(req, directRule, active) => <RuleEditor req={req} directRule={directRule} active={active} />} />
+        <RequestDetail />
         <RulesSidebar />
       </div>
 

@@ -1,23 +1,23 @@
-import { createUniqueId, Show, splitProps } from "solid-js";
+import { createUniqueId, omit, Show } from "solid-js";
 import { Input } from "./Inputs";
 
 export function CheckboxField(props) {
-  const [local, native] = splitProps(props, ["label", "hint", "trailing", "class", "onChange"]);
+  const native = omit(props, "label", "hint", "trailing", "class", "onChange");
   const hintId = createUniqueId();
 
   return (
     <>
-      <label class={`toggle-label${local.class ? ` ${local.class}` : ""}`}>
+      <label class={["toggle-label", props.class]}>
         <Input
           {...native}
           type="checkbox"
-          aria-describedby={local.hint ? hintId : undefined}
-          onChange={(event) => local.onChange?.(event.currentTarget.checked, event)}
+          aria-describedby={props.hint ? hintId : undefined}
+          onChange={(event) => props.onChange?.(event.currentTarget.checked, event)}
         />
-        <span>{local.label}</span>
-        {local.trailing}
+        <span>{props.label}</span>
+        {props.trailing}
       </label>
-      <Show when={local.hint}><div id={hintId} class="form-hint">{local.hint}</div></Show>
+      <Show when={props.hint}><div id={hintId} class="form-hint">{props.hint}</div></Show>
     </>
   );
 }

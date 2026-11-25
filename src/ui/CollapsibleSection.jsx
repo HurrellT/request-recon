@@ -7,7 +7,7 @@ export function CollapsibleSection(props) {
   const bodyId = createUniqueId();
 
   return (
-    <section class="section" classList={{ collapsed: collapsed() }}>
+    <section class={["section", { collapsed: collapsed() }]}>
       <h3 class="section-heading">
         <Button
           class="section-header"

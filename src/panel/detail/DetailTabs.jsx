@@ -28,8 +28,7 @@ export function DetailTabs(props) {
           <Button
             id={`detail-tab-${tab}`}
             role="tab"
-            class="tab-btn"
-            classList={{ active: props.activeTab === tab }}
+            class={["tab-btn", { active: props.activeTab === tab }]}
             aria-selected={props.activeTab === tab}
             aria-controls="tab-content"
             tabindex={props.activeTab === tab ? 0 : -1}

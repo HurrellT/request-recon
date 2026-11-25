@@ -1,4 +1,4 @@
-import { onCleanup, onMount } from "solid-js";
+import { onCleanup, onSettled } from "solid-js";
 import { addRequest, findRule, receiveCommandReply, setIsRecording, setPort, setRules, showToast } from "./store";
 import { t } from "../lib/i18n";
 import boltSvg from "../assets/icons/bolt.svg?raw";
@@ -51,7 +51,7 @@ export function usePort(tabId) {
     }, 20_000);
   };
 
-  onMount(connect);
+  onSettled(connect);
   onCleanup(() => {
     disposed = true;
     clearTimeout(reconnectTimer);

@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js";
+import { createEffect, createMemo, createSignal, onCleanup, onSettled, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { truncateText } from "../../lib/limits";
 import { buildGenerationMessages, generateMockResponse, LlmError, LLM_PROVIDERS, llmPermissionOrigin, MAX_LLM_CONTEXT_BYTES, validateLlmSettings } from "../../lib/llm";
@@ -33,16 +33,16 @@ export function AiRuleGenerator(props) {
     setWorking(false);
   };
 
-  createEffect(on([() => props.request?.id, () => props.targetKey, () => props.active], () => {
+  createEffect(() => [props.request?.id, props.targetKey, props.active], () => {
     cancel();
     setSample(truncateText(props.request?.resBody ?? "", MAX_LLM_CONTEXT_BYTES));
     setPrompt("");
     setConsent(false);
     setResult(null);
     setError("");
-  }));
+  });
 
-  onMount(async () => {
+  const loadSettings = async () => {
     try {
       const saved = await loadLlmSettings(chrome.storage);
       if (disposed) return;
@@ -50,7 +50,8 @@ export function AiRuleGenerator(props) {
       setToken(saved.token);
     } catch (_) { if (!disposed) setError(t("llmStorageFailed")); }
     finally { if (!disposed) setLoading(false); }
-  });
+  };
+  onSettled(() => { void loadSettings(); });
   onCleanup(() => { disposed = true; cancel(); });
 
   const updateSettings = (field, value) => {

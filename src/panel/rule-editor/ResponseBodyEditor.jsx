@@ -1,11 +1,11 @@
-import { Show } from "solid-js";
+import { lazy, Loading, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { prettyJSON, tryFormatJSON } from "../../lib/request-utils";
 import { CheckboxField, FormField } from "../../ui/Controls";
-import { lazy } from "solid-js";
 import { IconButton } from "../../ui/IconButton";
-const JsonCodeEditor = lazy(() => import("../../ui/JsonCodeEditor").then((module) => ({ default: module.JsonCodeEditor })));
 import { showToast } from "../store";
+
+const JsonCodeEditor = lazy(() => import("../../ui/JsonCodeEditor"), { export: "JsonCodeEditor" });
 
 export function ResponseBodyEditor(props) {
   const format = () => {
@@ -32,13 +32,15 @@ export function ResponseBodyEditor(props) {
         }
       >
         {({ id, labelId, describedBy }) => (
-          <JsonCodeEditor
-            id={id}
-            labelId={labelId}
-            describedBy={describedBy}
-            value={props.draft.responseBody}
-            onChange={(value) => props.update("responseBody", value)}
-          />
+          <Loading>
+            <JsonCodeEditor
+              id={id}
+              labelId={labelId}
+              describedBy={describedBy}
+              value={props.draft.responseBody}
+              onChange={(value) => props.update("responseBody", value)}
+            />
+          </Loading>
         )}
       </FormField>
       </Show>

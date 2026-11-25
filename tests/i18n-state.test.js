@@ -31,6 +31,7 @@ test("a saved language syncs across views without overriding a newer choice", as
     assert.equal(language(), "en");
 
     for (const listener of listeners) listener({ language: { newValue: "es" } }, "local");
+    await Promise.resolve();
     assert.equal(language(), "es");
 
     cleanup();

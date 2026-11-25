@@ -1,4 +1,4 @@
-import { createEffect, createSignal, For, on, onCleanup, Show } from "solid-js";
+import { createEffect, createSignal, flush, For, onCleanup, Show } from "solid-js";
 import { t } from "../../lib/i18n";
 import { fetchLlmModels, LlmError, LLM_PROVIDERS, llmModelsEndpoint, llmPermissionOrigin, validateLlmConnection } from "../../lib/llm";
 import { Button, CheckboxField, FormField, Input, Select } from "../../ui/Controls";
@@ -20,13 +20,13 @@ export function LlmModelPicker(props) {
     controller = null;
     setLoading(false);
   };
-  createEffect(on([() => props.settings.provider, () => props.settings.endpoint, () => props.token], () => {
+  createEffect(() => [props.settings.provider, props.settings.endpoint, props.token], () => {
     cancel();
     setModels([]);
     setLoaded(false);
     setError("");
-  }));
-  createEffect(on(() => props.active, (active) => { if (!active) cancel(); }));
+  });
+  createEffect(() => props.active, (active) => { if (!active) cancel(); });
   onCleanup(() => { disposed = true; cancel(); });
 
   const load = async () => {
@@ -62,6 +62,7 @@ export function LlmModelPicker(props) {
   const chooseProvider = (id) => {
     props.onProviderChange(id);
     setManual(false);
+    flush();
     if (autoFetch()) void load();
   };
 

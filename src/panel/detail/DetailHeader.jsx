@@ -32,8 +32,7 @@ export function DetailHeader(props) {
         </Show>
         <Show when={props.ruleState === "intercepted" || props.ruleState === "blocked"}>
           <span
-            class="detail-rule-state"
-            classList={{ blocked: props.ruleState === "blocked" }}
+            class={["detail-rule-state", { blocked: props.ruleState === "blocked" }]}
             title={t(props.ruleState === "blocked" ? "blockedRequest" : "interceptedTitle")}
           >
             <Icon name={props.ruleState === "blocked" ? "ban" : "bolt"} size="sm" />

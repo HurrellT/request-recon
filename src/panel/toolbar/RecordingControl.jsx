@@ -5,7 +5,7 @@ export function RecordingControl(props) {
   return (
     <Button
       id="record-btn"
-      classList={{ active: props.recording }}
+      class={{ active: props.recording }}
       aria-pressed={props.recording}
       title={t("recordTitle")}
       onClick={props.onToggle}

@@ -8,7 +8,7 @@ export function RuleListItem(props) {
   const name = () => props.rule.name || props.rule.urlPattern || t("unnamed");
 
   return (
-    <li class="rule-item" classList={{ disabled: !props.rule.enabled, selected: props.selected }}>
+    <li class={["rule-item", { disabled: !props.rule.enabled, selected: props.selected }]}>
       <ToggleSwitch
         label={`${props.rule.enabled ? t("disable") : t("enable")}: ${name()}`}
         checked={!!props.rule.enabled}

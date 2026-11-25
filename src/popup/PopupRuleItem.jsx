@@ -6,7 +6,7 @@ export function PopupRuleItem(props) {
   const name = () => props.rule.name || props.rule.urlPattern || t("unnamed");
 
   return (
-    <li class="popup-rule-item" classList={{ disabled: !props.rule.enabled }}>
+    <li class={["popup-rule-item", { disabled: !props.rule.enabled }]}>
       <ToggleSwitch
         label={`${props.rule.enabled ? t("disable") : t("enable")}: ${name()}`}
         checked={!!props.rule.enabled}

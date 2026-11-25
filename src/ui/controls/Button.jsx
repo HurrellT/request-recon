@@ -1,17 +1,15 @@
-import { splitProps } from "solid-js";
+import { omit } from "solid-js";
 
 export function Button(props) {
-  const [local, native] = splitProps(props, ["variant", "class", "classList", "children"]);
-  const className = () => [local.variant && `btn btn-${local.variant}`, local.class].filter(Boolean).join(" ");
+  const native = omit(props, "variant", "class", "children", "type");
 
   return (
     <button
       {...native}
-      type={native.type ?? "button"}
-      class={className()}
-      classList={local.classList}
+      type={props.type ?? "button"}
+      class={[props.variant && `btn btn-${props.variant}`, props.class]}
     >
-      {local.children}
+      {props.children}
     </button>
   );
 }

@@ -1,4 +1,4 @@
-import { createEffect, createSignal, on, onCleanup } from "solid-js";
+import { createEffect, createSignal, onCleanup } from "solid-js";
 import { t } from "../../lib/i18n";
 import { ruleMatchesRequest } from "../../lib/request-utils";
 import {
@@ -34,19 +34,19 @@ export function RulesSidebar() {
     if (restoreFocus) queueMicrotask(() => document.getElementById("rules-toggle-btn")?.focus());
   };
 
-  createEffect(on([showRulesSidebar, overlay], ([open, isOverlay]) => {
-    if (open && isOverlay) {
+  const modalOpen = () => showRulesSidebar() && overlay();
+  createEffect(modalOpen, (open) => {
+    if (open) {
       queueMicrotask(() => document.querySelector("#rules-sidebar .sidebar-close-btn")?.focus());
     }
-  }));
+  });
 
-  createEffect(() => {
-    const modal = showRulesSidebar() && overlay();
+  createEffect(modalOpen, (modal) => {
     const regions = ["toolbar", "request-list-panel", "detail-panel"].map((id) => document.getElementById(id));
     for (const region of regions) if (region) region.inert = modal;
-    onCleanup(() => {
+    return () => {
       for (const region of regions) if (region) region.inert = false;
-    });
+    };
   });
 
   const edit = (rule) => {
@@ -107,10 +107,10 @@ export function RulesSidebar() {
 
   return (
     <>
-      <div class="rules-sidebar-backdrop" classList={{ open: overlay() && showRulesSidebar() }} aria-hidden="true" onPointerDown={() => close()} />
+      <div class={["rules-sidebar-backdrop", { open: modalOpen() }]} aria-hidden="true" onPointerDown={() => close()} />
       <aside
         id="rules-sidebar"
-        classList={{ open: showRulesSidebar() }}
+        class={{ open: showRulesSidebar() }}
         role={overlay() && showRulesSidebar() ? "dialog" : undefined}
         aria-modal={overlay() && showRulesSidebar() ? "true" : undefined}
         aria-labelledby="rules-sidebar-heading"

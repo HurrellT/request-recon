@@ -1,22 +1,22 @@
-import { createEffect, splitProps } from "solid-js";
+import { createEffect, omit } from "solid-js";
 
-const controlClass = (variant, className, kind) => [variant === "form" && `form-${kind}`, className].filter(Boolean).join(" ");
+const controlClass = (variant, className, kind) => [variant === "form" && `form-${kind}`, className];
 
 export function Input(props) {
-  const [local, native] = splitProps(props, ["variant", "class"]);
-  return <input {...native} class={controlClass(local.variant, local.class, "input")} />;
+  const native = omit(props, "variant", "class");
+  return <input {...native} class={controlClass(props.variant, props.class, "input")} />;
 }
 
 export function Select(props) {
-  const [local, native] = splitProps(props, ["variant", "class", "children", "value"]);
+  const native = omit(props, "variant", "class", "children", "value");
   let element;
-  createEffect(() => {
-    if (element && local.value != null) element.value = String(local.value);
+  createEffect(() => props.value, (value) => {
+    if (element && value != null) element.value = String(value);
   });
-  return <select {...native} ref={element} class={controlClass(local.variant, local.class, "select")}>{local.children}</select>;
+  return <select {...native} ref={element} class={controlClass(props.variant, props.class, "select")}>{props.children}</select>;
 }
 
 export function TextArea(props) {
-  const [local, native] = splitProps(props, ["variant", "class"]);
-  return <textarea {...native} class={controlClass(local.variant, local.class, "textarea")} />;
+  const native = omit(props, "variant", "class");
+  return <textarea {...native} class={controlClass(props.variant, props.class, "textarea")} />;
 }

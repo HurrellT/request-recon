@@ -1,4 +1,4 @@
-import { createEffect, onCleanup, onMount } from "solid-js";
+import { createEffect, onSettled } from "solid-js";
 import { EditorView, basicSetup } from "codemirror";
 import { EditorState } from "@codemirror/state";
 import { indentUnit, HighlightStyle, syntaxHighlighting } from "@codemirror/language";
@@ -39,7 +39,7 @@ export function JsonCodeEditor(props) {
   let view;
   let syncingFromProps = false;
 
-  onMount(() => {
+  onSettled(() => {
     view = new EditorView({
       parent: container,
       doc: props.value ?? "",
@@ -67,10 +67,10 @@ export function JsonCodeEditor(props) {
         }),
       ],
     });
+    return () => view.destroy();
   });
 
-  createEffect(() => {
-    const value = props.value ?? "";
+  createEffect(() => props.value ?? "", (value) => {
     if (view && value !== view.state.doc.toString()) {
       syncingFromProps = true;
       try {
@@ -80,8 +80,6 @@ export function JsonCodeEditor(props) {
       }
     }
   });
-
-  onCleanup(() => view?.destroy());
 
   return <div class="json-code-editor" ref={container} />;
 }

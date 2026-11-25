@@ -15,13 +15,12 @@ export function RequestRow(props) {
 
   return (
     <Button
-      class="request-item"
-      classList={{
+      class={["request-item", {
         selected: props.selected,
         intercepted: props.ruleState === "intercepted",
         blocked: props.ruleState === "blocked",
         "has-active-rule": props.ruleState === "pending",
-      }}
+      }]}
       aria-current={props.selected ? "true" : undefined}
       title={props.req.url}
       onClick={props.onSelect}
@@ -37,7 +36,7 @@ export function RequestRow(props) {
       </span>
       <RequestRuleState state={props.ruleState} />
       <Show when={subLabel()}>
-        {(label) => <span class="req-row-sub" classList={{ "is-gql": label().isGql }}>{label().text}</span>}
+        {(label) => <span class={["req-row-sub", { "is-gql": label().isGql }]}>{label().text}</span>}
       </Show>
     </Button>
   );

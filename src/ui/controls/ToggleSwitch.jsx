@@ -1,16 +1,16 @@
-import { splitProps } from "solid-js";
+import { omit } from "solid-js";
 import { Input } from "./Inputs";
 
 export function ToggleSwitch(props) {
-  const [local, native] = splitProps(props, ["label", "onChange", "onClick", "class"]);
+  const native = omit(props, "label", "onChange", "onClick", "class");
 
   return (
-    <label class={`toggle-switch${local.class ? ` ${local.class}` : ""}`} title={local.label} onClick={local.onClick}>
+    <label class={["toggle-switch", props.class]} title={props.label} onClick={props.onClick}>
       <Input
         {...native}
         type="checkbox"
-        aria-label={local.label}
-        onChange={(event) => local.onChange?.(event.currentTarget.checked, event)}
+        aria-label={props.label}
+        onChange={(event) => props.onChange?.(event.currentTarget.checked, event)}
       />
       <span class="toggle-slider" aria-hidden="true" />
     </label>

@@ -8,7 +8,7 @@ export function FormField(props) {
 
   return (
     <div class={`form-group${props.class ? ` ${props.class}` : ""}`}>
-      <div classList={{ "body-header": !!props.actions }}>
+      <div class={{ "body-header": !!props.actions }}>
         <FieldLabel id={labelId} for={id} class="form-label" note={props.note}>{props.label}</FieldLabel>
         {props.actions}
       </div>

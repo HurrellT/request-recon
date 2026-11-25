@@ -1,19 +1,19 @@
-import { splitProps } from "solid-js";
+import { omit } from "solid-js";
 import { Icon } from "./Icon";
 import { Button } from "./Controls";
 
 export function IconButton(props) {
-  const [local, buttonProps] = splitProps(props, ["icon", "label", "title", "class", "children"]);
+  const buttonProps = omit(props, "icon", "label", "title", "class", "children");
 
   return (
     <Button
       {...buttonProps}
-      class={`btn-icon${local.class ? ` ${local.class}` : ""}`}
-      aria-label={local.label}
-      title={local.title ?? local.label}
+      class={["btn-icon", props.class]}
+      aria-label={props.label}
+      title={props.title ?? props.label}
     >
-      <Icon name={local.icon} />
-      {local.children}
+      <Icon name={props.icon} />
+      {props.children}
     </Button>
   );
 }
